@@ -46,10 +46,6 @@ class fix_delete_modules_form extends moodleform {
         // Add elements to form.
         global $CFG;
 
-        $this->actionurl = new \moodle_url('/admin/tool/fix_delete_modules/fix_module.php', array(
-            'sesskey'          => sesskey()
-        ));
-
         $mform = $this->_form; // Don't forget the underscore!
 
         $mform->addElement('submit', 'submit',  get_string('button_delete_mod_without_backup', 'tool_fix_delete_modules')
@@ -84,11 +80,7 @@ class separate_delete_modules_form extends moodleform {
     public function definition() {
         // Add elements to form.
         global $CFG;
-
-        $this->actionurl = new \moodle_url('/admin/tool/fix_delete_modules/separate_module.php', array(
-            'sesskey'          => sesskey()
-        ));
-
+        
         $mform = $this->_form; // Don't forget the underscore!
 
         $mform->addElement('submit', 'submit',  get_string('button_separate_modules', 'tool_fix_delete_modules')
