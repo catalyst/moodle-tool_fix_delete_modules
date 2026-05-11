@@ -33,9 +33,11 @@ require_once("delete_module.php");
 require_once("diagnoser.php");
 require_once("outcome.php");
 require_once("surgeon.php");
+require_once("orphan_module_list.php");
 require_once(__DIR__."/../form.php");
 
-use html_table, html_writer, moodle_url, separate_delete_modules_form, fix_delete_modules_form;
+use html_table, html_writer, moodle_url, separate_delete_modules_form, fix_delete_modules_form,
+    requeue_orphan_module_form, requeue_orphan_modules_all_form;
 /**
  * controller class which liases between the user facing (GUI/CLI files) and the model classes (diagnoser/surgeon).
  *
@@ -727,5 +729,220 @@ class reporter {
         }
         return $this->ishtmloutput ? $OUTPUT->render_from_template("tool_fix_delete_modules/$templatename", $data)
                                     : $data['title'].PHP_EOL.$data['body'].PHP_EOL;
+    }
+
+    /**
+     * Build the orphan-modules report section — table of stuck cms with no queued task,
+     * plus per-row Re-queue buttons and a Re-queue-all bulk button.
+     *
+     * Renders as HTML when $this->ishtmloutput is true, plain text otherwise.
+     *
+     * @return string
+     */
+    public function get_orphan_modules_report() {
+        global $DB, $OUTPUT;
+
+        $orphans = (new orphan_module_list())->get_orphan_modules();
+
+        if (empty($orphans)) {
+            if ($this->ishtmloutput) {
+                // Match the catalyst pattern for "all good" — green text under the heading.
+                $heading = html_writer::tag(
+                    'h4',
+                    get_string('heading_orphan_modules', 'tool_fix_delete_modules'),
+                    ['class' => 'fix-orphans-heading']
+                );
+                $body = html_writer::tag(
+                    'p',
+                    get_string('orphan_modules_none_found', 'tool_fix_delete_modules'),
+                    ['class' => 'text-success']
+                );
+                return $heading . $body;
+            }
+            return get_string('orphan_modules_none_found', 'tool_fix_delete_modules') . PHP_EOL;
+        }
+
+        // Decorate each orphan row with course shortname, module type, and activity
+        // name (from the module-specific table — every standard activity has a 'name' column).
+        $rows = [];
+        foreach ($orphans as $cm) {
+            $modname = $DB->get_field('modules', 'name', ['id' => $cm->module]);
+            $course  = $DB->get_field('course', 'shortname', ['id' => $cm->course]);
+            $activity = '-';
+            if ($modname) {
+                try {
+                    $activity = $DB->get_field($modname, 'name', ['id' => $cm->instance]) ?: '-';
+                } catch (\dml_exception $e) {
+                    $activity = '-';
+                }
+            }
+            $rows[] = (object)[
+                'cmid'        => $cm->id,
+                'courseid'    => $cm->course,
+                'shortname'   => $course ?: '-',
+                'modname'     => $modname ?: '-',
+                'instance'    => $cm->instance,
+                'activity'    => $activity,
+                'requeueform' => $this->ishtmloutput ? $this->get_requeue_orphan_button($cm, $modname) : '',
+            ];
+        }
+
+        $count = count($rows);
+        $data = [
+            'heading'             => get_string('heading_orphan_modules', 'tool_fix_delete_modules'),
+            'count'               => $count,
+            'countlabel'          => get_string('orphan_modules_count', 'tool_fix_delete_modules', $count),
+            'explanationintro'    => get_string('orphan_modules_explanation_intro', 'tool_fix_delete_modules'),
+            'explanationaction'   => get_string('orphan_modules_explanation_action', 'tool_fix_delete_modules'),
+            'rows'                => $rows,
+            'requeueall'          => $this->ishtmloutput ? $this->get_requeue_all_orphans_button() : '',
+        ];
+
+        if ($this->ishtmloutput) {
+            return $OUTPUT->render_from_template('tool_fix_delete_modules/orphan_modules_table', $data);
+        }
+
+        // Plain-text rendering for CLI.
+        $out = $data['heading'] . PHP_EOL . $data['countlabel'] . PHP_EOL
+             . $data['explanationintro'] . PHP_EOL . PHP_EOL . $data['explanationaction'] . PHP_EOL;
+        $out .= sprintf(
+            "%-8s %-22s %-25s %-40s%s",
+            'cmid',
+            'course',
+            'module',
+            'activity',
+            PHP_EOL
+        );
+        foreach ($rows as $row) {
+            $course = $row->courseid . ' ' . $row->shortname;
+            $module = $row->modname . ' #' . $row->instance;
+            $out .= sprintf(
+                "%-8d %-22s %-25s %-40s%s",
+                $row->cmid,
+                substr($course, 0, 22),
+                substr($module, 0, 25),
+                substr($row->activity, 0, 40),
+                PHP_EOL
+            );
+        }
+        return $out;
+    }
+
+    /**
+     * Render a single "Permanently delete orphaned module #N" button for an orphan cm.
+     *
+     * @param \stdClass $cm course_modules row.
+     * @param string $modname module type name (e.g. 'assign', 'quiz').
+     * @return string
+     */
+    private function get_requeue_orphan_button(\stdClass $cm, string $modname) {
+        $actionurl = new moodle_url('/admin/tool/fix_delete_modules/fix_module.php');
+        $params    = ['cmid' => $cm->id, 'cmname' => $modname];
+        $form = new requeue_orphan_module_form($actionurl, $params);
+        return $form->render();
+    }
+
+    /**
+     * Render the "Permanently delete all orphaned modules" bulk button.
+     *
+     * @return string
+     */
+    private function get_requeue_all_orphans_button() {
+        $actionurl = new moodle_url('/admin/tool/fix_delete_modules/fix_module.php');
+        $form = new requeue_orphan_modules_all_form($actionurl, []);
+        return $form->render();
+    }
+
+    /**
+     * Re-queue a list of orphaned course modules and return rendered outcome.
+     *
+     * If $cmids is empty, re-queue every orphan currently present.
+     *
+     * For each cm: render the surgeon's per-cm messages in a fix_results block,
+     * then append a final aggregate summary block (matching the catalyst pattern of
+     * outcome_module_fix_successful / outcome_module_fix_fail at the end of the
+     * existing flow).
+     *
+     * @param int[] $cmids list of course_modules.id values to re-queue (empty = all orphans).
+     * @return string rendered outcome (HTML or plain text).
+     */
+    public function requeue_orphan_modules(array $cmids = []) {
+        if (empty($cmids)) {
+            $cmids = (new orphan_module_list())->get_cmids();
+        }
+
+        $output = '';
+        $okcount = 0;
+        $failcount = 0;
+        $noopcount = 0;
+
+        foreach ($cmids as $cmid) {
+            $cmid = (int)$cmid;
+            $messages = surgeon::requeue_orphan_module($cmid);
+
+            // Classify the outcome by checking which language string was emitted —
+            // mirrors how catalyst's existing surgeon code communicates state via
+            // pre-built lang strings rather than a separate status flag.
+            $okstring   = get_string('outcome_orphan_module_requeued', 'tool_fix_delete_modules', $cmid);
+            $gonestring = get_string('outcome_orphan_module_already_gone', 'tool_fix_delete_modules', $cmid);
+            $unstuck    = get_string('outcome_orphan_module_not_stuck', 'tool_fix_delete_modules', $cmid);
+
+            if (in_array($okstring, $messages, true)) {
+                $okcount++;
+            } else if (in_array($gonestring, $messages, true) || in_array($unstuck, $messages, true)) {
+                $noopcount++;
+            } else {
+                $failcount++;
+            }
+
+            $data = [
+                'title'           => get_string('button_requeue_orphan_module', 'tool_fix_delete_modules') . " (cmid {$cmid})",
+                'outcomemessages' => $messages,
+            ];
+            $output .= $this->format_message($data, 'task_fix_results');
+        }
+
+        // Append the aggregate summary block.
+        $total = $okcount + $failcount + $noopcount;
+        if ($total > 0) {
+            $output .= $this->format_message([
+                'title'           => get_string('orphan_modules_summary_heading', 'tool_fix_delete_modules'),
+                'outcomemessages' => [$this->build_summary_message($okcount, $failcount, $noopcount, $total)],
+            ], 'task_fix_results');
+        }
+
+        return $output;
+    }
+
+    /**
+     * Pick the right summary lang string based on the per-cm outcome counts.
+     *
+     * @param int $ok number of cms successfully re-queued.
+     * @param int $fail number of cms that failed.
+     * @param int $noop number of cms that needed no action (already gone / no longer flagged).
+     * @param int $total total cms processed.
+     * @return string
+     */
+    private function build_summary_message(int $ok, int $fail, int $noop, int $total) {
+        $suffix = $total === 1 ? 'single' : 'plural';
+
+        if ($ok === $total) {
+            $key = 'outcome_orphan_modules_summary_all_ok_' . $suffix;
+            return get_string($key, 'tool_fix_delete_modules', $total);
+        }
+        if ($noop === $total) {
+            $key = 'outcome_orphan_modules_summary_all_noop_' . $suffix;
+            return get_string($key, 'tool_fix_delete_modules', $total);
+        }
+        if ($fail === $total) {
+            $key = 'outcome_orphan_modules_summary_all_fail_' . $suffix;
+            return get_string($key, 'tool_fix_delete_modules', $total);
+        }
+        return get_string('outcome_orphan_modules_summary_partial', 'tool_fix_delete_modules', (object)[
+            'ok'    => $ok,
+            'fail'  => $fail,
+            'noop'  => $noop,
+            'total' => $total,
+        ]);
     }
 }

@@ -485,4 +485,55 @@ class surgeon {
         }
         return $DB->get_record_select('task_adhoc', $sql, $params);
     }
+
+    /**
+     * Re-queue a course_delete_modules adhoc task for a single orphaned course module —
+     * a cm with deletioninprogress=1 that has no matching task in the queue.
+     *
+     * Uses Moodle's own course_delete_module($cmid, true) helper, which is the same code
+     * path the activity Delete button uses. This means the deletion goes through every
+     * normal hook, observer and event the platform expects.
+     *
+     * The deletioninprogress flag is cleared first because course_delete_module() will
+     * set it back; running the helper against an already-flagged cm is otherwise a noop
+     * shape that can short-circuit on some Moodle versions.
+     *
+     * @param int $cmid course_modules.id of the orphan to re-queue.
+     * @return string[] outcome messages (one or more lines, language-string-formatted).
+     */
+    public static function requeue_orphan_module(int $cmid): array {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/course/lib.php');
+
+        $messages = [];
+
+        if (!$cm = $DB->get_record('course_modules', ['id' => $cmid])) {
+            // The cm has already been removed — most commonly because cron drained
+            // the freshly-queued task between this click and the previous one (back
+            // button, double-click, or two tabs). Treat as a benign info outcome.
+            $messages[] = get_string('outcome_orphan_module_already_gone', 'tool_fix_delete_modules', $cmid);
+            return $messages;
+        }
+
+        if (empty($cm->deletioninprogress)) {
+            $messages[] = get_string('outcome_orphan_module_not_stuck', 'tool_fix_delete_modules', $cmid);
+            return $messages;
+        }
+
+        try {
+            // Note: course_delete_module() will set deletioninprogress=1 itself when queueing.
+            $DB->set_field('course_modules', 'deletioninprogress', 0, ['id' => $cmid]);
+            course_delete_module($cmid, true);
+            $messages[] = get_string('outcome_orphan_module_requeued', 'tool_fix_delete_modules', $cmid);
+        } catch (\Throwable $e) {
+            // Restore the flag so the cm is still visible to a future re-queue attempt.
+            $DB->set_field('course_modules', 'deletioninprogress', 1, ['id' => $cmid]);
+            $messages[] = get_string(
+                'outcome_orphan_module_requeue_failed',
+                'tool_fix_delete_modules',
+                ['cmid' => $cmid, 'error' => $e->getMessage()]
+            );
+        }
+        return $messages;
+    }
 }

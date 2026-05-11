@@ -63,6 +63,71 @@ class fix_delete_modules_form extends moodleform {
 }
 
 /**
+ * requeue_orphan_module_form — per-row "Permanently delete orphaned module #N" button.
+ *
+ * Used by the orphan-modules report section. Posts to fix_module.php with
+ * action=requeue_orphan_module, which re-queues a fresh course_delete_modules
+ * adhoc task for the given cmid via Moodle's course_delete_module() API.
+ *
+ * @package    tool_fix_delete_modules
+ * @copyright  2026 Catalyst IT
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class requeue_orphan_module_form extends moodleform {
+    /**
+     * Define the form.
+     */
+    public function definition() {
+        $mform = $this->_form;
+
+        $cmid    = $this->_customdata['cmid'];
+        $label   = get_string('button_requeue_orphan_module', 'tool_fix_delete_modules');
+        $icon    = '<i class="fa fa-rotate-right fix-orphan-requeue-icon" aria-hidden="true"></i> ';
+        $btnhtml = '<button type="submit" class="btn btn-outline-orphan-requeue btn-sm">' . $icon . s($label) . '</button>';
+        $mform->addElement('html', $btnhtml);
+
+        $mform->addElement('hidden', 'action', 'requeue_orphan_module');
+        $mform->setType('action', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'cmid', $cmid);
+        $mform->setType('cmid', PARAM_INT);
+        $mform->addElement('hidden', 'cmname', $this->_customdata['cmname']);
+        $mform->setType('cmname', PARAM_ALPHAEXT);
+        $mform->addElement('hidden', 'taskid', 0);
+        $mform->setType('taskid', PARAM_INT);
+    }
+}
+
+/**
+ * requeue_orphan_modules_all_form — "Permanently delete all orphaned modules" bulk button.
+ *
+ * @package    tool_fix_delete_modules
+ * @copyright  2026 Catalyst IT
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class requeue_orphan_modules_all_form extends moodleform {
+    /**
+     * Define the form.
+     */
+    public function definition() {
+        $mform = $this->_form;
+
+        $label   = get_string('button_requeue_orphan_modules_all', 'tool_fix_delete_modules');
+        $icon    = '<i class="fa fa-rotate-right fix-orphan-requeue-icon" aria-hidden="true"></i> ';
+        $btnhtml = '<button type="submit" class="btn btn-outline-orphan-requeue">' . $icon . s($label) . '</button>';
+        $mform->addElement('html', $btnhtml);
+
+        $mform->addElement('hidden', 'action', 'requeue_orphan_modules_all');
+        $mform->setType('action', PARAM_ALPHANUMEXT);
+        $mform->addElement('hidden', 'cmid', 0);
+        $mform->setType('cmid', PARAM_INT);
+        $mform->addElement('hidden', 'cmname', 'all');
+        $mform->setType('cmname', PARAM_ALPHAEXT);
+        $mform->addElement('hidden', 'taskid', 0);
+        $mform->setType('taskid', PARAM_INT);
+    }
+}
+
+/**
  * separate_delete_modules_form Form Class.
  *
  * @package    tool_fix_delete_modules

@@ -53,6 +53,7 @@ $reporter = new reporter(true, $minimumfaildelay);
 $pagesubtitle = get_string('displaypage-subtitle', 'tool_fix_delete_modules');
 $reports      = $reporter->get_tables_report();
 $diagnoses    = $reporter->get_diagnosis();
+$orphans      = $reporter->get_orphan_modules_report();
 if ($reports == '') { // No report means no adhoc tasks in queue.
     $diagnoses = html_writer::tag('p',
                                   get_string('success_none_found', 'tool_fix_delete_modules'),
@@ -65,7 +66,8 @@ if ($diagnoses == '') { // No diagnoses means no issues with queued adhoc tasks.
 }
 $maindata  = ['pagesubtitle' => $pagesubtitle,
               'reports' => $reports,
-              'diagnoses' => $diagnoses];
+              'diagnoses' => $diagnoses,
+              'orphans' => $orphans];
 $output = $OUTPUT->render_from_template('tool_fix_delete_modules/main_elements', $maindata);
 
 if ($output == '') {

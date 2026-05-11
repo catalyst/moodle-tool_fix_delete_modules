@@ -1,0 +1,86 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template tool_fix_delete_modules/orphan_modules_table
+
+    Renders the orphaned-course-modules report section: cms with deletioninprogress=1
+    that have no queued course_delete_modules adhoc task. Includes a top toolbar
+    (count summary + bulk re-queue button) and a per-row Re-queue button.
+
+    Context variables required for this template:
+    * heading string - section heading.
+    * count int - number of orphan rows.
+    * countlabel string - localised "{n} orphaned module(s) found".
+    * explanationintro string - paragraph 1: what these rows are.
+    * explanationaction string - paragraph 2: how to act on them.
+    * rows array of objects:
+        - cmid int
+        - courseid int
+        - shortname string (course shortname)
+        - modname string (e.g. assign / quiz)
+        - instance int
+        - activity string (the activity's user-visible name)
+        - requeueform string (HTML for the per-row re-queue form/button)
+    * requeueall string - HTML for the bulk re-queue form/button.
+
+    Example context (json):
+    {
+        "heading": "Orphaned course modules",
+        "count": 1,
+        "countlabel": "1 orphaned module(s) found",
+        "explanation": "Each row below is an activity ...",
+        "rows": [
+            {"cmid": 32, "courseid": 6, "shortname": "test-course-2", "modname": "assign", "instance": 14, "activity": "Sample assignment 3", "requeueform": "<form ...>"}
+        ],
+        "requeueall": "<form ...>"
+    }
+}}
+<div id="orphan-modules" class="fix-orphans">
+    <h4 class="fix-orphans-heading">{{heading}}</h4>
+    <div class="fix-orphans-explanation">
+        <p>{{{explanationintro}}}</p>
+        <p class="mb-0">{{{explanationaction}}}</p>
+    </div>
+    <div class="fix-orphans-toolbar">
+        <span class="fix-orphans-count">{{countlabel}}</span>
+        <span class="fix-orphans-bulk">{{{requeueall}}}</span>
+    </div>
+    <table class="generaltable fix-orphans-table">
+        <thead>
+            <tr>
+                <th scope="col">cmid</th>
+                <th scope="col">courseid</th>
+                <th scope="col">course shortname</th>
+                <th scope="col">Module</th>
+                <th scope="col">Activity name</th>
+                <th scope="col" class="fix-orphans-action-col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#rows}}
+            <tr>
+                <td>{{cmid}}</td>
+                <td>{{courseid}}</td>
+                <td>{{shortname}}</td>
+                <td>{{instance}} (<span class="fix-orphans-modpill">{{modname}}</span>)</td>
+                <td>{{activity}}</td>
+                <td class="fix-orphans-action-col">{{{requeueform}}}</td>
+            </tr>
+            {{/rows}}
+        </tbody>
+    </table>
+</div>

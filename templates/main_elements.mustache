@@ -29,16 +29,19 @@
     * pagesubtitle string - The page subtitle of the index.php page.
     * reports string - HTML content for the reports related course_module_delete tasks.
     * diagnoses string - HTML content for the diagnoses of course_module_delete tasks.
+    * orphans string - HTML content for the orphaned-course-modules section (may be empty).
 
     Example context (json):
     {
         "pagesubtitle": "Check Modules",
         "reports": "<table><tr><td> ....</td></tr></table>",
-        "diagnoses": "<table><tr><td> ....</td></tr></table>"
+        "diagnoses": "<table><tr><td> ....</td></tr></table>",
+        "orphans": "<div class=\"fix-delete-modules-orphans\"> ... </div>"
     }
 }}
 <div class="fix-delete-modules-main">
     <h3>{{pagesubtitle}}</h3>
     {{{diagnoses}}}
     {{{reports}}}
+    {{{orphans}}}
 </div>
