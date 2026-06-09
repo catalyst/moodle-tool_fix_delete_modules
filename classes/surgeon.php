@@ -310,7 +310,13 @@ class surgeon {
         }
 
         // Notify the competency subsystem.
-        \core_competency\api::hook_course_module_deleted($cm);
+        // The function hook_course_module_deleted() deletes the module context in 5.1+.
+        // context_module::instance($cm->id); causes dml_missing_record_exception when the course_modules record is already absent.
+        try {
+            \core_competency\api::hook_course_module_deleted($cm);
+        } catch (\dml_missing_record_exception $e) {
+            // Context no longer exists; competency data already cleaned up or not present.
+        }
 
         // Delete the context.
         if ($modcontext) {
