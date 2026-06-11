@@ -136,7 +136,7 @@ class reporter {
      *
      * @return array of diagnosis
      */
-    private function get_diagnosis_data(array $taskids = null) {
+    private function get_diagnosis_data(?array $taskids = null) {
         $diagnoses = array();
         $deletetaskslist = new delete_task_list($this->minimumfaildelay);
         $deletetasks = $deletetaskslist->get_deletetasks();
