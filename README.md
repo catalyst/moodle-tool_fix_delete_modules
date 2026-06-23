@@ -8,6 +8,7 @@ This has been tested to cover the following course_delete_module adhoc task fail
 - course_module table record absent.
 - module's table (e.g. quiz) record absent.
 - context table record absent.
+- **course module flagged with `deletioninprogress=1` but no matching adhoc task in the queue ("orphaned" course module).**
 
 ## Check ##
 - If the task(s) contains multiple course modules, it will recommend
@@ -18,6 +19,13 @@ This has been tested to cover the following course_delete_module adhoc task fail
   course modules. For example, the course module record or the assign table
   record might be missing. See "Resolve" for information about how the plugin
   can resolve these.
+- If there are **orphaned course modules** — rows in `course_modules` flagged
+  with `deletioninprogress=1` but with no matching `course_delete_modules`
+  adhoc task in the queue — the plugin will list them in a separate "Orphaned
+  course modules" section. This can happen when a worker process is killed
+  mid-execute (for example by a worker time-out, OOM, or container restart)
+  before the framework can mark the task as failed, leaving the cm flagged
+  but no longer queued.
 
 ## Resolve ##
 - Separate "clustered" adhoc tasks:
@@ -29,6 +37,12 @@ This has been tested to cover the following course_delete_module adhoc task fail
   If a task is incomplete, the plugin can delete the remnant data records
   and clear off the course_delete_adhoc task. Although this process will NOT
   backup the module to the recycle bin.
+- Re-queue orphaned course modules:
+  For each orphaned cm (and the bulk action for all of them), the plugin
+  re-queues a fresh `course_delete_modules` adhoc task via Moodle's standard
+  `course_delete_module($cmid, true)` helper. This is the same code path the
+  activity Delete button uses, so all normal deletion hooks, observers and
+  events fire as expected. The next cron run completes the deletion as normal.
 
 ## GUI and CLI ##
 There is a GUI side and a CLI to the plugin.
@@ -43,6 +57,14 @@ The "faildelay" filter can also be modified via a param.
 Instructions of how to use the CLI can be found in the help page:
 
     $ php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --help
+
+The CLI also supports the orphan-cm scan via the `--requeue-orphans` flag:
+
+    $ # List orphaned course modules without making changes:
+    $ php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --requeue-orphans
+
+    $ # Re-queue them via course_delete_module() so cron will complete the deletion:
+    $ php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --requeue-orphans --fix
 
 ## Branches ##
 

@@ -15,19 +15,25 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Plugin callbacks for tool_fix_delete_modules.
  *
  * @package     tool_fix_delete_modules
- * @author      Brad Pasley <brad.pasley@catalyst-au.net>
- * @copyright   2022 Catalyst IT
+ * @copyright   2026 Catalyst IT
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'tool_fix_delete_modules';
-$plugin->release = '0.2.0';
-$plugin->version = 2026051101;
-$plugin->requires = 2018051700;
-$plugin->supported = [35, 405];
-$plugin->maturity = MATURITY_BETA;
+/**
+ * Register status checks with the Moodle Check API.
+ *
+ * Discovered automatically by \core\check\manager::get_status_checks() (M3.9+) so
+ * the orphan-cm check appears on /report/status/index.php and is picked up by
+ * tool_heartbeat's croncheck.php. On Moodle &lt;3.9 the Check API doesn't exist
+ * and this callback is simply never invoked.
+ *
+ * @return \core\check\check[]
+ */
+function tool_fix_delete_modules_status_checks(): array {
+    return [
+        new \tool_fix_delete_modules\check\orphan_modules(),
+    ];
+}

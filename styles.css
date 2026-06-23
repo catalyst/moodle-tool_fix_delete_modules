@@ -96,3 +96,147 @@
     left: -999px;
     max-width: 0;
 }
+
+/* Orphaned-modules section — light pink box matching catalyst's .fix-diagnosis,
+   toolbar layout, outlined #A32D2D buttons with refresh icon. */
+.fix-orphans {
+    margin-top: 1.5rem;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    background-color: #fee;
+    width: 100%;
+}
+.fix-orphans-heading {
+    color: #511;
+    margin-bottom: 0.5rem;
+}
+.fix-orphans-explanation {
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #ffb1b1;
+    color: #511;
+}
+.fix-orphans-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+.fix-orphans-count {
+    font-weight: 500;
+    color: #511;
+}
+.fix-orphans-bulk .mform,
+.fix-orphans-bulk .fitem,
+.fix-orphans-bulk .felement,
+.fix-orphans-table td .mform,
+.fix-orphans-table td .fitem,
+.fix-orphans-table td .felement {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+.fix-orphans-bulk form,
+.fix-orphans-table td form {
+    margin: 0;
+}
+.fix-orphans-table {
+    background-color: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0;
+    border-collapse: collapse;
+    width: 100%;
+}
+.fix-orphans-table th {
+    background-color: #fff;
+    border-bottom: 1px solid #e0d4d4;
+}
+.fix-orphans-table tbody tr:nth-child(odd) td {
+    background-color: #fff;
+}
+.fix-orphans-table tbody tr:nth-child(even) td {
+    background-color: #f5f5f5;
+}
+.fix-orphans-table td,
+.fix-orphans-table th {
+    vertical-align: middle;
+    padding: 0.6rem 0.75rem;
+    line-height: 1.5;
+}
+.fix-orphans-table .fix-orphans-action-col {
+    text-align: right;
+    white-space: nowrap;
+}
+/* Flatten moodleform wrappers inside the action cell so the button can sit
+   on the same vertical centre as the row's text. moodleform normally renders
+   the submit element inside <form><.mform><.fitem><.felement> — each of these
+   contributes its own line-height + margin and pushes the button below the
+   row's text baseline. Strip those defaults so the inline-flex centring wins. */
+.fix-orphans-table td.fix-orphans-action-col {
+    line-height: 1;
+}
+.fix-orphans-table td .btn {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    line-height: 1.4;
+}
+.fix-orphans-table td form,
+.fix-orphans-table td .mform,
+.fix-orphans-table td .fitem,
+.fix-orphans-table td .felement,
+.fix-orphans-table td .fcontainer {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    line-height: inherit;
+    border: 0;
+    background: transparent;
+}
+/* The Bootstrap grid columns moodleform wraps each form element in
+   (col-md-3 = label, col-md-9 = input). The label is empty for our submit-only
+   element, so collapse the label column entirely; let the input column behave inline. */
+.fix-orphans-table td .fitem .col-md-3 {
+    display: none;
+}
+.fix-orphans-table td .fitem .col-md-9 {
+    flex: 0 0 auto;
+    max-width: none;
+    width: auto;
+    padding: 0;
+    margin: 0;
+    display: inline;
+}
+.fix-orphans-modpill {
+    display: inline-block;
+    padding: 0.15em 0.55em;
+    border-radius: 0.5rem;
+    background-color: #f3e7e7;
+    color: #511;
+    font-family: monospace;
+    font-size: 0.9em;
+    line-height: 1.3;
+    vertical-align: baseline;
+    margin: 0 0.15em;
+}
+.fix-orphan-requeue-icon {
+    margin-right: 0.4rem;
+}
+/* Outlined burgundy button — neutral fill, #A32D2D border + text.
+   Higher specificity than Bootstrap btn-primary defaults. */
+#page-admin-tool-fix_delete_modules-index .fix-orphans .btn.btn-outline-orphan-requeue,
+#page-admin-tool-fix_delete_modules-index .fix-orphans-bulk .btn.btn-outline-orphan-requeue {
+    background-color: transparent;
+    border: 1px solid #A32D2D;
+    color: #A32D2D;
+    font-weight: 500;
+}
+#page-admin-tool-fix_delete_modules-index .fix-orphans .btn.btn-outline-orphan-requeue:hover,
+#page-admin-tool-fix_delete_modules-index .fix-orphans .btn.btn-outline-orphan-requeue:focus,
+#page-admin-tool-fix_delete_modules-index .fix-orphans-bulk .btn.btn-outline-orphan-requeue:hover,
+#page-admin-tool-fix_delete_modules-index .fix-orphans-bulk .btn.btn-outline-orphan-requeue:focus {
+    background-color: #A32D2D;
+    color: #fff;
+}

@@ -24,8 +24,13 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 
-require_login();
+// Gate: this endpoint mutates state (separates clustered course_delete_modules
+// adhoc tasks). Restrict to admins by reusing the same admin_externalpage hook
+// index.php uses; this enforces the moodle/site:config capability declared in
+// settings.php and also calls require_login() internally.
+admin_externalpage_setup('tool_fix_delete_modules');
 
 use tool_fix_delete_modules\reporter;
 

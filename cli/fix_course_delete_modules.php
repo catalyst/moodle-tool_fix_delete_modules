@@ -35,15 +35,17 @@ use tool_fix_delete_modules\reporter;
 
 // Get the cli options.
 list($options, $unrecognized) = cli_get_params(array(
-    'fix'      => false,
+    'fix'              => false,
     'minimumfaildelay' => false,
-    'taskids'  => false,
-    'help'     => false
+    'taskids'          => false,
+    'requeue-orphans'  => false,
+    'help'             => false,
 ),
 array(
     'f' => 'fix',
     'm' => 'minimumfaildelay',
     't' => 'taskids',
+    'r' => 'requeue-orphans',
     'h' => 'help'
 ));
 
@@ -65,11 +67,17 @@ Options:
 -f, --fix                Fix the incomplete course_delete_module adhoc tasks.
                          To fix tasks '--taskids' must be explicitly
                          specified which modules.
+-r, --requeue-orphans    List orphaned course modules: cms with deletioninprogress=1
+                         but no queued course_delete_modules adhoc task.
+                         Use with --fix to actually re-queue them via Moodle's
+                         course_delete_module(\$cmid, true) helper.
 -h, --help            Print out this help
 
 Example:
 \$sudo -u www-data /usr/bin/php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --taskids=*
 \$sudo -u www-data /usr/bin/php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --taskids=2,3,4 --fix
+\$sudo -u www-data /usr/bin/php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --requeue-orphans
+\$sudo -u www-data /usr/bin/php admin/tool/fix_delete_modules/cli/fix_course_delete_modules.php --requeue-orphans --fix
 ";
 
 if ($unrecognized) {
@@ -79,6 +87,52 @@ if ($unrecognized) {
 
 if ($options['help']) {
     cli_writeln($help);
+    die();
+}
+
+// The --requeue-orphans flag short-circuits the task-driven flow: list (or re-queue)
+// orphaned cms — those flagged deletioninprogress=1 with no matching task.
+if ($options['requeue-orphans']) {
+    require_once(__DIR__ . '/../classes/orphan_module_list.php');
+    require_once(__DIR__ . '/../classes/surgeon.php');
+
+    $orphanlist = new \tool_fix_delete_modules\orphan_module_list();
+    $orphans = $orphanlist->get_orphan_modules();
+
+    if (empty($orphans)) {
+        cli_writeln(get_string('orphan_modules_none_found', 'tool_fix_delete_modules'));
+        die();
+    }
+
+    cli_writeln(count($orphans) . ' orphaned course module(s) found:');
+    cli_writeln(sprintf('%-8s %-10s %-10s %-15s', 'cmid', 'courseid', 'instance', 'modid'));
+    foreach ($orphans as $cm) {
+        cli_writeln(sprintf('%-8d %-10d %-10d %-15d', $cm->id, $cm->course, $cm->instance, $cm->module));
+    }
+
+    if (!$options['fix']) {
+        cli_writeln('');
+        cli_writeln('Add --fix to re-queue these via course_delete_module($cmid, true).');
+        die();
+    }
+
+    cli_writeln('');
+    cli_writeln('Re-queueing...');
+
+    // Moodle's course_delete_module() writes $USER->id into the task customdata as
+    // userid/realuserid. In a fresh CLI context $USER is the noreply user (id=0),
+    // and the adhoc task runner skips userid=0 tasks silently. Set up the main
+    // admin so the queued tasks have a runnable owner.
+    \core\cron::setup_user(get_admin());
+
+    foreach ($orphans as $cm) {
+        $messages = \tool_fix_delete_modules\surgeon::requeue_orphan_module((int)$cm->id);
+        foreach ($messages as $msg) {
+            cli_writeln('  ' . $msg);
+        }
+    }
+    cli_writeln('Done. Run cron (or "php admin/cli/adhoc_task.php --execute');
+    cli_writeln('--classname=\'\\\\core_course\\\\task\\\\course_delete_modules\'") to drain the queue.');
     die();
 }
 
