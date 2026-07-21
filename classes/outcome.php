@@ -71,5 +71,4 @@ class outcome {
     public function get_messages() {
         return $this->messages;
     }
-
 }

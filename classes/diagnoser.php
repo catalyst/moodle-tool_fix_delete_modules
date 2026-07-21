@@ -51,7 +51,7 @@ class diagnoser {
      */
     public function __construct(delete_task $task) {
 
-        $symptoms = array();
+        $symptoms = [];
         // Diagnose any Task issues.
         $symptoms = $this->mergearrays($symptoms, $this->get_multimodule_status($task));
         $symptoms = $this->mergearrays($symptoms, $this->get_missing_task_adhoc_records($task));
@@ -95,15 +95,15 @@ class diagnoser {
         // At least, we don't know what type of module it is (even if the record still exists).
         $symptomstring = get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules');
         if (is_null($modulename = $deletemodule->get_modulename())) {
-            return array((string) $deletemodule->coursemoduleid => [$symptomstring]);
+            return [(string) $deletemodule->coursemoduleid => [$symptomstring]];
         } else {
             global $DB;
             // Check if this module's coursemodule id exists in course_modules table.
-            if (!$DB->record_exists($modulename, array('id' => $deletemodule->moduleinstanceid))) {
-                return array((string) $deletemodule->coursemoduleid => [$symptomstring]);
+            if (!$DB->record_exists($modulename, ['id' => $deletemodule->moduleinstanceid])) {
+                return [(string) $deletemodule->coursemoduleid => [$symptomstring]];
             }
         }
-        return array();
+        return [];
     }
 
     /**
@@ -116,11 +116,11 @@ class diagnoser {
     public function get_missing_coursemodule_records(delete_module $deletemodule) {
         global $DB;
         // Check if this module's coursemodule id exists in course_modules table.
-        if (!$DB->record_exists('course_modules', array('id' => $deletemodule->coursemoduleid))) {
+        if (!$DB->record_exists('course_modules', ['id' => $deletemodule->coursemoduleid])) {
             $symptomstring = get_string('symptom_course_module_table_record_missing', 'tool_fix_delete_modules');
-            return array((string) $deletemodule->coursemoduleid => [$symptomstring]);
+            return [(string) $deletemodule->coursemoduleid => [$symptomstring]];
         }
-        return array();
+        return [];
     }
 
     /**
@@ -132,14 +132,16 @@ class diagnoser {
      */
     public function get_missing_context_records(delete_module $deletemodule) {
         global $DB;
-        $returnarray = array();
+        $returnarray = [];
         // Check if this module's coursemodule id exists in context table.
-        if (!$DB->record_exists('context', array('contextlevel' => '70',
-                                                 'instanceid' => $deletemodule->coursemoduleid))) {
+        if (
+            !$DB->record_exists('context', ['contextlevel' => '70',
+                                                 'instanceid' => $deletemodule->coursemoduleid])
+        ) {
             $symptomstring = get_string('symptom_context_table_record_missing', 'tool_fix_delete_modules');
-            return array((string) $deletemodule->coursemoduleid => [$symptomstring]);
+            return [(string) $deletemodule->coursemoduleid => [$symptomstring]];
         }
-        return array();
+        return [];
     }
 
     /**
@@ -152,20 +154,20 @@ class diagnoser {
     public function get_missing_section_records(delete_module $deletemodule) {
         global $DB;
         // Check if this module's coursemodule id exists in section table.
-        $sections = $DB->get_records('course_sections', array('course' => $deletemodule->courseid));
+        $sections = $DB->get_records('course_sections', ['course' => $deletemodule->courseid]);
         foreach ($sections as $section) {
             $sequence = $section->sequence;
             $cms = explode(',', $sequence);
             foreach ($cms as $cm) {
                 if ($cm == $deletemodule->coursemoduleid) {
                     // Found the record, it's good.
-                    return array();
+                    return [];
                 }
             }
         }
         // Couldn't find the record.
         $symptomstring = get_string('symptom_course_section_table_record_missing', 'tool_fix_delete_modules');
-        return array((string) $deletemodule->coursemoduleid => [$symptomstring]);
+        return [(string) $deletemodule->coursemoduleid => [$symptomstring]];
     }
 
     /**
@@ -178,9 +180,9 @@ class diagnoser {
     public function get_multimodule_status(delete_task $deletetask) {
         if ($deletetask->is_multi_module_task()) {
             $symptomstring = get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules');
-            return array($symptomstring => [$symptomstring]);
+            return [$symptomstring => [$symptomstring]];
         }
-        return array();
+        return [];
     }
 
     /**
@@ -195,9 +197,9 @@ class diagnoser {
         if (!$deletetask->task_record_exists()) {
             // Change element to array if there is already one diagnosis for this module.
             $symptomstring = get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules');
-            return array($symptomstring => [$symptomstring]);
+            return [$symptomstring => [$symptomstring]];
         }
-        return array();
+        return [];
     }
 
     /**

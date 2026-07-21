@@ -26,26 +26,28 @@
 
 define('CLI_SCRIPT', true);
 
-require(__DIR__.'/../../../../config.php');
-require(__DIR__.'/../classes/reporter.php');
-require_once($CFG->dirroot.'/course/lib.php');
-require_once($CFG->libdir.'/clilib.php');
+require(__DIR__ . '/../../../../config.php');
+require(__DIR__ . '/../classes/reporter.php');
+require_once($CFG->dirroot . '/course/lib.php');
+require_once($CFG->libdir . '/clilib.php');
 
 use tool_fix_delete_modules\reporter;
 
 // Get the cli options.
-list($options, $unrecognized) = cli_get_params(array(
+[$options, $unrecognized] = cli_get_params(
+    [
     'fix'      => false,
     'minimumfaildelay' => false,
     'taskids'  => false,
-    'help'     => false
-),
-array(
+    'help'     => false,
+    ],
+    [
     'f' => 'fix',
     'm' => 'minimumfaildelay',
     't' => 'taskids',
-    'h' => 'help'
-));
+    'h' => 'help',
+    ]
+);
 
 $help =
 "
@@ -92,11 +94,11 @@ if ($options['minimumfaildelay'] !== false) {
 $taskids = preg_split('/\s*,\s*/', $options['taskids'], -1, PREG_SPLIT_NO_EMPTY);
 if (in_array('*', $taskids) || empty($taskids)) {
     $where = "WHERE classname = :classname";
-    $params = array('classname' => '\core_course\task\course_delete_modules');
+    $params = ['classname' => '\core_course\task\course_delete_modules'];
 } else {
-    list($sql, $params) = $DB->get_in_or_equal($taskids, SQL_PARAMS_NAMED, 'id');
-    $params += array('classname' => '\core_course\task\course_delete_modules');
-    $where = "WHERE classname = :classname AND id ". $sql;
+    [$sql, $params] = $DB->get_in_or_equal($taskids, SQL_PARAMS_NAMED, 'id');
+    $params += ['classname' => '\core_course\task\course_delete_modules'];
+    $where = "WHERE classname = :classname AND id " . $sql;
 }
 
 // Require --fix to also have the --modules param (with specific modules listed).
@@ -108,7 +110,7 @@ if ($isfix && !$isfixclusteredtask && !$isfixwithmodulesspecified) {
     die();
 }
 
-$taskcount = $DB->get_field_sql('SELECT count(id) FROM {task_adhoc} '. $where, $params);
+$taskcount = $DB->get_field_sql('SELECT count(id) FROM {task_adhoc} ' . $where, $params);
 
 if (!$taskcount && !$options['fix']) { // If "fix" is included, attempt to resolve.
     cli_error('No course_delete_module adhoc tasks found');
@@ -119,15 +121,15 @@ $totaltaskscount = count($coursemoduledeletetasks);
 
 echo "Checking $taskcount/$totaltaskscount course_delete_module adhoc tasks...\n\n";
 
-$taskids = ($totaltaskscount == $taskcount) ? array() : $taskids;
+$taskids = ($totaltaskscount == $taskcount) ? [] : $taskids;
 
 if ($totaltaskscount == 0) {
     echo "\n...No course_delete_module adhoc tasks found.\n\n";
     die();
 }
 
-$problems = array();
-$allerrors = array();
+$problems = [];
+$allerrors = [];
 
 $reporter = new reporter(false, $minimumfaildelay, $taskids);
 

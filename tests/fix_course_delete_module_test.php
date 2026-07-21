@@ -23,6 +23,7 @@ require_once(__DIR__ . "/../classes/diagnosis.php");
 require_once(__DIR__ . "/../classes/delete_module.php");
 require_once(__DIR__ . "/../classes/delete_task_list.php");
 
+// phpcs:disable moodle.PHPUnit.TestClassesFinal.UnitTestClassesFinal -- Shared base class is extended by component tests.
 /**
  * The fix_course_delete_module_test base test class.
  *
@@ -35,7 +36,6 @@ require_once(__DIR__ . "/../classes/delete_task_list.php");
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class fix_course_delete_module_test extends \advanced_testcase {
-
     /** @var $user moodle user object*/
     public $user;
     /** @var $course moodle course object*/
@@ -94,28 +94,23 @@ class fix_course_delete_module_test extends \advanced_testcase {
      */
     public function setUp(): void {
         global $DB;
+        parent::setUp();
         $this->resetAfterTest();
-
-        // Ensure all adhoc tasks/cache are cleared.
-        if (isset(\core\task\manager::$miniqueue)) {
-            \core\task\manager::$miniqueue = [];
-        } // Clear the cached queue.
-        $DB->delete_records('task_adhoc');
 
         // Setup a course with a page, a url, a book, and an assignment and a quiz module.
         $this->user     = $this->getDataGenerator()->create_user();
         $this->course   = $this->getDataGenerator()->create_course();
-        $this->page     = $this->getDataGenerator()->create_module('page', array('course' => $this->course->id));
+        $this->page     = $this->getDataGenerator()->create_module('page', ['course' => $this->course->id]);
         $this->pagecm   = get_coursemodule_from_id('page', $this->page->cmid);
-        $this->url      = $this->getDataGenerator()->create_module('url', array('course' => $this->course->id));
+        $this->url      = $this->getDataGenerator()->create_module('url', ['course' => $this->course->id]);
         $this->urlcm    = get_coursemodule_from_id('url', $this->url->cmid);
-        $this->book     = $this->getDataGenerator()->create_module('book', array('course' => $this->course->id));
+        $this->book     = $this->getDataGenerator()->create_module('book', ['course' => $this->course->id]);
         $this->bookcm   = get_coursemodule_from_id('book', $this->book->cmid);
-        $this->assign   = $this->getDataGenerator()->create_module('assign', array('course' => $this->course->id));
+        $this->assign   = $this->getDataGenerator()->create_module('assign', ['course' => $this->course->id]);
         $this->assigncm = get_coursemodule_from_id('assign', $this->assign->cmid);
-        $this->quiz     = $this->getDataGenerator()->create_module('quiz', array('course' => $this->course->id));
+        $this->quiz     = $this->getDataGenerator()->create_module('quiz', ['course' => $this->course->id]);
         $this->quizcm   = get_coursemodule_from_id('quiz', $this->quiz->cmid);
-        $this->label    = $this->getDataGenerator()->create_module('label', array('course' => $this->course->id));
+        $this->label    = $this->getDataGenerator()->create_module('label', ['course' => $this->course->id]);
         $this->labelcm  = get_coursemodule_from_id('label', $this->label->cmid);
         $this->pagecontextid   = (\context_module::instance($this->page->cmid))->id;
         $this->urlcontextid    = (\context_module::instance($this->url->cmid))->id;
@@ -128,7 +123,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $DB->delete_records('quiz');
 
         // Delete the url mod's course_module record to replicate a failed course_module_delete adhoc task.
-        $DB->delete_records('course_modules', array('id' => $this->url->cmid));
+        $DB->delete_records('course_modules', ['id' => $this->url->cmid]);
 
         // Remove cmid from sequence for label.
         $sql = "SELECT * FROM {course_sections} WHERE course = ? AND sequence LIKE ?";
@@ -149,7 +144,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $assigndata = [
             'cms' => [$this->assigncm],
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltaskassign->set_custom_data($assigndata);
 
@@ -157,13 +152,13 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $this->removaltaskmulti = new \core_course\task\course_delete_modules();
         // When MDL-80930 is integrated, the adhoc task course_delete_modules only stores failed cmids.
         // Hence, we have 2 failed cmids, page & quiz here, so the multi task checks still be valid.
-        $cmsarray = array((string) $this->assigncm->id => array('id' => $this->assigncm->id),
-                          (string) $this->pagecm->id => array('id' => $this->pagecm->id),
-                          (string) $this->quizcm->id   => array('id' => $this->quizcm->id));
+        $cmsarray = [(string) $this->assigncm->id => ['id' => $this->assigncm->id],
+                          (string) $this->pagecm->id => ['id' => $this->pagecm->id],
+                          (string) $this->quizcm->id   => ['id' => $this->quizcm->id]];
         $multidata = [
             'cms' => $cmsarray,
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltaskmulti->set_custom_data($multidata);
 
@@ -172,7 +167,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $pagedata = [
             'cms' => [$this->pagecm],
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltaskpage->set_custom_data($pagedata);
 
@@ -181,7 +176,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $urldata = [
             'cms' => [$this->urlcm],
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltaskurl->set_custom_data($urldata);
 
@@ -190,7 +185,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $bookdata = [
             'cms' => [$this->bookcm],
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltaskbook->set_custom_data($bookdata);
 
@@ -199,9 +194,15 @@ class fix_course_delete_module_test extends \advanced_testcase {
         $labeldata = [
             'cms' => [$this->labelcm],
             'userid' => $this->user->id,
-            'realuserid' => $this->user->id
+            'realuserid' => $this->user->id,
         ];
         $this->removaltasklabel->set_custom_data($labeldata);
+
+        // Ensure adhoc tasks queued while creating the fixtures and the task cache are cleared.
+        if (isset(\core\task\manager::$miniqueue)) {
+            \core\task\manager::$miniqueue = [];
+        } // Clear the cached queue.
+        $DB->delete_records('task_adhoc');
     }
 
     /**
@@ -209,27 +210,27 @@ class fix_course_delete_module_test extends \advanced_testcase {
      *
      * @coversNothing
      */
-    public function test_delete_task_setup() {
+    public function test_delete_task_setup(): void {
         global $DB;
         $this->resetAfterTest(true);
 
         // The assign & book module exists in the course modules table & other tables.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->assign->cmid)));
-        $this->assertTrue($DB->record_exists('assign', array('id' => $this->assigncm->instance)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->book->cmid)));
-        $this->assertTrue($DB->record_exists('book', array('id' => $this->bookcm->instance)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->label->cmid)));
-        $this->assertTrue($DB->record_exists('label', array('id' => $this->labelcm->instance)));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->assign->cmid]));
+        $this->assertTrue($DB->record_exists('assign', ['id' => $this->assigncm->instance]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->book->cmid]));
+        $this->assertTrue($DB->record_exists('book', ['id' => $this->bookcm->instance]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->label->cmid]));
+        $this->assertTrue($DB->record_exists('label', ['id' => $this->labelcm->instance]));
 
         // Check page & quiz table records deleted.
-        $this->assertFalse($DB->record_exists('page', array('id' => $this->pagecm->instance)));
-        $this->assertFalse($DB->record_exists('quiz', array('id' => $this->quizcm->instance)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->page->cmid)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->quiz->cmid)));
+        $this->assertFalse($DB->record_exists('page', ['id' => $this->pagecm->instance]));
+        $this->assertFalse($DB->record_exists('quiz', ['id' => $this->quizcm->instance]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->page->cmid]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->quiz->cmid]));
 
         // Delete the url mod's course_module record to replicate a failed course_module_delete adhoc task.
-        $this->assertFalse($DB->record_exists('course_modules', array('id' => $this->url->cmid)));
-        $this->assertTrue($DB->record_exists('url', array('id' => $this->urlcm->instance)));
+        $this->assertFalse($DB->record_exists('course_modules', ['id' => $this->url->cmid]));
+        $this->assertTrue($DB->record_exists('url', ['id' => $this->urlcm->instance]));
     }
 
     /**
@@ -241,7 +242,7 @@ class fix_course_delete_module_test extends \advanced_testcase {
     public function find_taskid(\core\task\adhoc_task $task) {
         global $DB;
 
-        $dbtasks = $DB->get_records('task_adhoc', array('classname' => '\core_course\task\course_delete_modules'));
+        $dbtasks = $DB->get_records('task_adhoc', ['classname' => '\core_course\task\course_delete_modules']);
         $taskid = 0;
         foreach ($dbtasks as $dbtaskid => $dbtask) {
             if ($dbtask->customdata === $task->get_custom_data_as_string()) {
@@ -349,3 +350,4 @@ class fix_course_delete_module_test extends \advanced_testcase {
         return [$deletemultitask, $deletepagetask, $deleteurltask, $deletebooktask, $deletelabeltask, $exceptionthrown];
     }
 }
+// phpcs:enable moodle.PHPUnit.TestClassesFinal.UnitTestClassesFinal

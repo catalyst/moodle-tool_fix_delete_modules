@@ -80,7 +80,7 @@ class delete_task {
      * @return array
      */
     public function get_coursemoduleids() {
-        $cmids = array();
+        $cmids = [];
         foreach ($this->deletemodules as $dm) {
             $cmids[] = $dm->coursemoduleid;
         }
@@ -93,7 +93,7 @@ class delete_task {
      * @return array
      */
     public function get_moduleinstanceids() {
-        $instanceids = array();
+        $instanceids = [];
         foreach ($this->deletemodules as $dm) {
             $instanceids[] = $dm->moduleinstanceid;
         }
@@ -109,7 +109,7 @@ class delete_task {
      * @return array
      */
     public function get_courseids(bool $uniqueids = true, bool $skipnulls = true) {
-        $courseids = array();
+        $courseids = [];
         foreach ($this->deletemodules as $dm) {
             if (!$skipnulls || isset($dm->courseid)) {
                 $courseids[$dm->coursemoduleid] = $dm->courseid;
@@ -124,7 +124,7 @@ class delete_task {
      * @return array
      */
     public function get_contextids() {
-        $contextids = array();
+        $contextids = [];
         foreach ($this->deletemodules as $dm) {
             $contextids[] = $dm->get_contextid();
         }
@@ -140,7 +140,7 @@ class delete_task {
      * @return array
      */
     public function get_modulenames(bool $uniquenames = true, bool $skipnulls = true, string $namefilter = '') {
-        $modulenames = array();
+        $modulenames = [];
         foreach ($this->deletemodules as $dm) {
             $modulename = $dm->get_modulename();
             if (!$skipnulls || isset($modulename)) {
@@ -168,7 +168,7 @@ class delete_task {
      */
     public function task_record_exists() {
         global $DB;
-        return $DB->record_exists('task_adhoc', array('id' => $this->taskid));
+        return $DB->record_exists('task_adhoc', ['id' => $this->taskid]);
     }
 
     /**
@@ -179,29 +179,28 @@ class delete_task {
     public function set_deletemodules_from_customdata(\stdClass $customdata) {
         global $DB;
         $cms = (array) $customdata->cms;
-        $this->deletemodules = array();
+        $this->deletemodules = [];
         foreach ($cms as $cmdata) {
             $instanceid = isset($cmdata->instance) ? $cmdata->instance : null;
             if (!isset($instanceid)) { // Attempt to retrieve from database.
-                if ($record = $DB->get_field('course_modules', 'instance', array('id' => $cmdata->id))) {
+                if ($record = $DB->get_field('course_modules', 'instance', ['id' => $cmdata->id])) {
                     $instanceid = $record;
                 }
             }
             $courseid = isset($cmdata->course) ? $cmdata->course : null;
             if (!isset($courseid)) { // Attempt to retrieve from database.
-                if ($record = $DB->get_field('course_modules', 'course', array('id' => $cmdata->id))) {
+                if ($record = $DB->get_field('course_modules', 'course', ['id' => $cmdata->id])) {
                     $courseid = $record;
                 }
             }
             $section = isset($cmdata->section) ? $cmdata->section : null;
             if (!isset($section)) { // Attempt to retrieve from database.
-                if ($record = $DB->get_field('course_modules', 'section', array('id' => $cmdata->id))) {
+                if ($record = $DB->get_field('course_modules', 'section', ['id' => $cmdata->id])) {
                     $section = $record;
                 }
             }
             $dm = new delete_module($cmdata->id, $instanceid, $courseid, $section);
             $this->deletemodules[(string) $cmdata->id] = $dm;
         }
-
     }
 }

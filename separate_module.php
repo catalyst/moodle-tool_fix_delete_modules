@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Separate into individual Module delete adhoc tasks
  *
@@ -34,7 +35,6 @@ $action       = required_param('action', PARAM_ALPHANUMEXT);
 $taskid       = required_param('taskid', PARAM_INT);
 
 if ($action == 'separate_module') {
-
     require_sesskey();
 
     $url = new moodle_url('/admin/tool/fix_delete_modules/separate_module.php');
@@ -42,7 +42,7 @@ if ($action == 'separate_module') {
     $PAGE->set_url($url);
     $PAGE->set_context(context_system::instance());
     $PAGE->set_title(get_string('pluginname', 'tool_fix_delete_modules'));
-    $PAGE->set_heading(get_string('pluginname', 'tool_fix_delete_modules'). " - separating module tasks");
+    $PAGE->set_heading(get_string('pluginname', 'tool_fix_delete_modules') . " - separating module tasks");
     $renderer = $PAGE->get_renderer('core');
 
     echo $OUTPUT->header();
@@ -51,7 +51,7 @@ if ($action == 'separate_module') {
     $reporter = new reporter(true, $minimumfaildelay);
 
     // Output template rendered results of fixing the course module.
-    echo $reporter->fix_tasks(array($taskid));
+    echo $reporter->fix_tasks([$taskid]);
 
     // Return to main page link.
     $mainurl    = new moodle_url('index.php');

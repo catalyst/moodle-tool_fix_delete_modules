@@ -36,14 +36,13 @@ require_once("fix_course_delete_module_test.php");
  * @copyright   2022 Catalyst IT
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class reporter_test extends fix_course_delete_module_test {
-
+final class reporter_test extends fix_course_delete_module_test {
     /**
      * Test for get/set modulename & get/set contextid.
      *
      * @covers \tool_fix_course_delete_module\reporter
      */
-    public function test_reporter_class() {
+    public function test_reporter_class(): void {
         global $DB;
 
         [$deletemultitask, $deletepagetask, $deleteurltask, $deletebooktask, $deletelabeltask, $exceptionthrown]
@@ -67,7 +66,7 @@ class reporter_test extends fix_course_delete_module_test {
         $messagesmulti = [get_string('outcome_separate_into_individual_task', 'tool_fix_delete_modules'),
                           get_string('outcome_separate_into_individual_task', 'tool_fix_delete_modules'),
                           get_string('outcome_separate_old_task_deleted', 'tool_fix_delete_modules'),
-                          get_string('outcome_task_fix_successful', 'tool_fix_delete_modules')
+                          get_string('outcome_task_fix_successful', 'tool_fix_delete_modules'),
         ];
 
         $messagespage = [get_string('outcome_file_table_record_deleted', 'tool_fix_delete_modules'),
@@ -79,7 +78,7 @@ class reporter_test extends fix_course_delete_module_test {
                          get_string('outcome_course_module_table_record_deleted', 'tool_fix_delete_modules'),
                          get_string('outcome_course_section_data_delete_fail', 'tool_fix_delete_modules'),
                          get_string('outcome_adhoc_task_record_rescheduled', 'tool_fix_delete_modules'),
-                         get_string('outcome_module_fix_successful', 'tool_fix_delete_modules')
+                         get_string('outcome_module_fix_successful', 'tool_fix_delete_modules'),
         ];
         $messagesurl = $messagespage;
         array_unshift($messagesurl, get_string('outcome_course_module_table_record_not_found', 'tool_fix_delete_modules'));
@@ -95,14 +94,14 @@ class reporter_test extends fix_course_delete_module_test {
             get_string('outcome_course_module_table_record_deleted', 'tool_fix_delete_modules'),
             get_string('outcome_course_section_data_deleted', 'tool_fix_delete_modules'),
             get_string('outcome_adhoc_task_record_rescheduled', 'tool_fix_delete_modules'),
-            get_string('outcome_module_fix_successful', 'tool_fix_delete_modules')
+            get_string('outcome_module_fix_successful', 'tool_fix_delete_modules'),
         ];
 
         $expectedoutcomemultitask = new outcome($deletemultitask, $messagesmulti);
-        $expectedoutcomepage      = new outcome($deletepagetask,  $messagespage);
-        $expectedoutcomeurltask   = new outcome($deleteurltask,   $messagesurl);
-        $expectedoutcomebooktask  = new outcome($deletebooktask,  $messagesbook);
-        $expectedoutcomelabeltask  = new outcome($deletelabeltask,  $messageslabel);
+        $expectedoutcomepage      = new outcome($deletepagetask, $messagespage);
+        $expectedoutcomeurltask   = new outcome($deleteurltask, $messagesurl);
+        $expectedoutcomebooktask  = new outcome($deletebooktask, $messagesbook);
+        $expectedoutcomelabeltask  = new outcome($deletelabeltask, $messageslabel);
 
         $testoutcomemulti = $surgeonmultitask->get_outcome();
         $testoutcomepage  = $surgeonpagetask->get_outcome();
@@ -154,7 +153,7 @@ class reporter_test extends fix_course_delete_module_test {
             \core\task\manager::adhoc_task_complete($task);
             $this->assertCount(--$adhoctaskprecount, $DB->get_records('task_adhoc'));
             // Check Adhoc Task is now cleared.
-            $this->assertEmpty($DB->get_records('task_adhoc', array('id' => $task->get_id())));
+            $this->assertEmpty($DB->get_records('task_adhoc', ['id' => $task->get_id()]));
         }
 
         if ($exceptionthrown) {
@@ -163,6 +162,5 @@ class reporter_test extends fix_course_delete_module_test {
         } else {
             $this->assertTrue($exceptionthrown, "Expected Exception wasn't thrown for line 148");
         }
-
     }
 }

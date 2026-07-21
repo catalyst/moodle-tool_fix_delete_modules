@@ -35,10 +35,10 @@ require_once("delete_task.php");
 require_once("delete_module.php");
 require_once("diagnosis.php");
 require_once("outcome.php");
-require_once($CFG->libdir.'/gradelib.php');
-require_once($CFG->libdir.'/completionlib.php');
-require_once($CFG->libdir.'/datalib.php');
-require_once($CFG->dirroot.'/blog/lib.php');
+require_once($CFG->libdir . '/gradelib.php');
+require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->libdir . '/datalib.php');
+require_once($CFG->dirroot . '/blog/lib.php');
 
 /**
  * surgeon class which fixes a Course Module delete task and provides an outcome object.
@@ -62,7 +62,7 @@ class surgeon {
      */
     public function __construct(diagnosis $diagnosis) {
 
-        $outcomemessages = array();
+        $outcomemessages = [];
         // Run fix and get outcome messages.
         $outcomemessages = $this->fix($diagnosis);
         $this->outcome = new outcome($diagnosis->get_task(), $outcomemessages);
@@ -95,22 +95,34 @@ class surgeon {
      */
     public function fix(diagnosis $diagnosis) {
         $symptoms = $diagnosis->get_symptoms();
-        $outcomemessages = array();
+        $outcomemessages = [];
 
         // Deal with task issues first.
 
         // If there the adhoc task is absent, advise adhoc_task cli command to be run.
-        if (in_array(get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules'),
-                     array_keys($symptoms))) {
+        if (
+            in_array(
+                get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules'),
+                array_keys($symptoms)
+            )
+        ) {
             $outcomemessages[] = get_string('outcome_adhoc_task_record_advice', 'tool_fix_delete_modules');
-        } else if (in_array(get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules'),
-                            array_keys($symptoms))) {
+        } else if (
+            in_array(
+                get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules'),
+                array_keys($symptoms)
+            )
+        ) {
             // If there the adhoc task is a multi-module task, split it into many tasks.
             $outcomemessages = $this->separate_multitask_into_moduletasks($diagnosis);
         } else { // Now, without any task issues, proceed to fix this singular module's issue(s).
             // Fix section before delete module.
-            if (in_array(get_string('symptom_course_section_table_record_missing', 'tool_fix_delete_modules'),
-                current($symptoms))) {
+            if (
+                in_array(
+                    get_string('symptom_course_section_table_record_missing', 'tool_fix_delete_modules'),
+                    current($symptoms)
+                )
+            ) {
                 if ($this->fix_course_sequence($diagnosis)) {
                     $outcomemessages[] = get_string('outcome_course_section_data_fixed', 'tool_fix_delete_modules');
                 }
@@ -129,16 +141,16 @@ class surgeon {
      */
     private function separate_multitask_into_moduletasks(diagnosis $diagnosis) {
         global $DB;
-        $outcomemessages = array();
+        $outcomemessages = [];
         $multimoduletask = $diagnosis->get_task();
         $deletemodules   = $multimoduletask->get_deletemodules();
 
         // Keep track of each task-module's cm data to check during re-execution.
-        $newtaskscms = array();
+        $newtaskscms = [];
         // Create individual adhoc task for each module.
         foreach ($deletemodules as $cmid => $deletemodule) {
             // Get the course module.
-            if (!$cm = $DB->get_record('course_modules', array('id' => $cmid))) {
+            if (!$cm = $DB->get_record('course_modules', ['id' => $cmid])) {
                 // Attempt to build from delete_module object.
                 $cm = new stdClass();
                 $cm->id = $deletemodule->coursemoduleid;
@@ -160,11 +172,11 @@ class surgeon {
             // Create an adhoc task for the deletion of the course module. The task takes an array of course modules for removal.
             $newdeletetask = new \core_course\task\course_delete_modules();
             $mainadminid = get_admin()->id;
-            $newdeletetask->set_custom_data(array(
-                'cms' => array($cm),
-                'userid' => $mainadminid,    // Set user to main admin.
-                'realuserid' => $mainadminid // Set user to main admin.
-            ));
+            $newdeletetask->set_custom_data([
+                'cms' => [$cm],
+                'userid' => $mainadminid, // Set user to main admin.
+                'realuserid' => $mainadminid, // Set user to main admin.
+            ]);
             $newtaskscms[] = $newdeletetask->get_custom_data();
 
             // Queue the task for the next run.
@@ -173,7 +185,7 @@ class surgeon {
         }
 
         // Remove old task.
-        if ($DB->delete_records('task_adhoc', array('id' => $multimoduletask->taskid))) {
+        if ($DB->delete_records('task_adhoc', ['id' => $multimoduletask->taskid])) {
             $outcomemessages[] = get_string('outcome_separate_old_task_deleted', 'tool_fix_delete_modules');
         } else {
             $outcomemessages[] = get_string('outcome_separate_old_task_delete_fail', 'tool_fix_delete_modules');
@@ -212,7 +224,7 @@ class surgeon {
     private function delete_module_cleanly(diagnosis $diagnosis) {
         global $DB, $OUTPUT;
 
-        $outcomemessages  = array();
+        $outcomemessages  = [];
         $task = $diagnosis->get_task();
         if ($task->is_multi_module_task()) {
             // Should not have been passed to here, but just in case!
@@ -230,7 +242,7 @@ class surgeon {
         }
 
         // Get the course module.
-        if (!$cm = $DB->get_record('course_modules', array('id' => $deletemodule->coursemoduleid))) {
+        if (!$cm = $DB->get_record('course_modules', ['id' => $deletemodule->coursemoduleid])) {
             $outcomemessages[] = get_string('outcome_course_module_table_record_not_found', 'tool_fix_delete_modules');
             $cm = new stdClass();
             $cm->id = $deletemodule->coursemoduleid;
@@ -257,8 +269,10 @@ class surgeon {
         }
 
         // Delete events from calendar.
-        if ($modulename && isset($cm->course) && $events = $DB->get_records('event', array('instance' => $cm->instance,
-                                                                                           'modulename' => $modulename))) {
+        if (
+            $modulename && isset($cm->course) && $events = $DB->get_records('event', ['instance' => $cm->instance,
+                                                                                           'modulename' => $modulename])
+        ) {
             $coursecontext = \context_course::instance($cm->course);
             foreach ($events as $event) {
                 $event->context = $coursecontext;
@@ -269,12 +283,14 @@ class surgeon {
         }
 
         // Delete grade items, outcome items and grades attached to modules.
-        if ($modulename && isset($cm->course)
-            && $DB->record_exists($modulename, array('id' => $cm->instance))
-            && $gradeitems = \grade_item::fetch_all(array('itemtype' => 'mod',
+        if (
+            $modulename && isset($cm->course)
+            && $DB->record_exists($modulename, ['id' => $cm->instance])
+            && $gradeitems = \grade_item::fetch_all(['itemtype' => 'mod',
                                                           'itemmodule' => $modulename,
                                                           'iteminstance' => $cm->instance,
-                                                          'courseid' => $cm->course))) {
+                                                          'courseid' => $cm->course])
+        ) {
             foreach ($gradeitems as $gradeitem) {
                 $gradeitem->delete('moddelete');
                 $outcomemessages[] = get_string('outcome_grade_tables_records_deleted', 'tool_fix_delete_modules');
@@ -291,13 +307,17 @@ class surgeon {
         // features are not turned on, in case they were turned on previously (these will be
         // very quick on an empty table).
         if ($modcontext) {
-            if ($DB->delete_records('course_modules_completion', array('coursemoduleid' => $cm->id))) {
+            if ($DB->delete_records('course_modules_completion', ['coursemoduleid' => $cm->id])) {
                 $outcomemessages[] = get_string('outcome_completion_table_record_deleted', 'tool_fix_delete_modules');
             }
-            if ($DB->delete_records('course_completion_criteria',
-                                    array('moduleinstance' => $cm->id,
+            if (
+                $DB->delete_records(
+                    'course_completion_criteria',
+                    ['moduleinstance' => $cm->id,
                                           'course' => $cm->course,
-                                          'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY))) {
+                    'criteriatype' => COMPLETION_CRITERIA_TYPE_ACTIVITY]
+                )
+            ) {
                 $outcomemessages[] = get_string('outcome_completion_criteria_table_record_deleted', 'tool_fix_delete_modules');
             }
         }
@@ -314,7 +334,7 @@ class surgeon {
         // context_module::instance($cm->id); causes dml_missing_record_exception when the course_modules record is already absent.
         try {
             \core_competency\api::hook_course_module_deleted($cm);
-        } catch (\dml_missing_record_exception $e) {
+        } catch (\dml_missing_record_exception $e) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
             // Context no longer exists; competency data already cleaned up or not present.
         }
 
@@ -326,7 +346,7 @@ class surgeon {
         }
 
         // Delete the module from the course_modules table.
-        if ($DB->delete_records('course_modules', array('id' => $cm->id))) {
+        if ($DB->delete_records('course_modules', ['id' => $cm->id])) {
             $outcomemessages[] = get_string('outcome_course_module_table_record_deleted', 'tool_fix_delete_modules');
         } else {
             $outcomemessages[] = get_string('outcome_context_table_record_delete_fail', 'tool_fix_delete_modules');
@@ -341,15 +361,15 @@ class surgeon {
 
         // Trigger event for course module delete action.
         if ($modcontext && $modulename) {
-            $event = \core\event\course_module_deleted::create(array(
+            $event = \core\event\course_module_deleted::create([
                 'courseid' => $cm->course,
                 'context'  => $modcontext,
                 'objectid' => $cm->id,
-                'other'    => array(
+                'other'    => [
                     'modulename'   => $modulename,
                     'instanceid'   => $cm->instance,
-                )
-            ));
+                ],
+            ]);
             $event->add_record_snapshot('course_modules', $cm);
             $event->trigger();
             // Function for Moodle 4.0+.
@@ -394,12 +414,12 @@ class surgeon {
             $moduleid = isset($cm->module) ? $cm->module : null;
             if (!isset($moduleid)) {
                 // Grab the {module} table id from this module's course_module record.
-                if (!$moduleid = $DB->get_field('course_modules', 'module', array('id' => $deletemodule->coursemoduleid))) {
+                if (!$moduleid = $DB->get_field('course_modules', 'module', ['id' => $deletemodule->coursemoduleid])) {
                     $moduleid = null;
                 }
             }
             // If moduleid is now set, attempt to retrieve the modulename from the modules table.
-            if (isset($moduleid) && $modulename = $DB->get_field('modules', 'name', array('id' => $moduleid))) {
+            if (isset($moduleid) && $modulename = $DB->get_field('modules', 'name', ['id' => $moduleid])) {
                     $returnname = $modulename;
             } else { // If moduleid is still not set or the name can't be retrieved, return null.
                     $returnname = null;
@@ -445,11 +465,10 @@ class surgeon {
         global $DB;
 
         // Find classname.
-        $classname = (strpos(get_class($task), '\\') !== 0) ? '\\'.get_class($task) : get_class($task);
+        $classname = (strpos(get_class($task), '\\') !== 0) ? '\\' . get_class($task) : get_class($task);
 
         // Check that it is a course_delete_module adhoc task.
         if ($classname == '\core_course\task\course_delete_modules') {
-
             // Function already exists on Moodle 3.7+.
             if (method_exists('\core\task\manager', 'reschedule_or_queue_adhoc_task')) {
                 return \core\task\manager::reschedule_or_queue_adhoc_task($task);

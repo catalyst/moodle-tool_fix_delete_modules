@@ -36,14 +36,13 @@ require_once("fix_course_delete_module_test.php");
  * @copyright   2022 Catalyst IT
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class diagnosis_test extends fix_course_delete_module_test {
-
+final class diagnosis_test extends fix_course_delete_module_test {
     /**
      * Test for get/set modulename & get/set contextid.
      *
      * @covers \tool_fix_course_delete_module\diagnosis
      */
-    public function test_diagnosis_class() {
+    public function test_diagnosis_class(): void {
         global $DB;
         $this->resetAfterTest(true);
 
@@ -68,18 +67,18 @@ class diagnosis_test extends fix_course_delete_module_test {
         } catch (\moodle_exception $exception) {
             // Replicate failed task.
             $this->assertCount($adhoctaskprecount, $DB->get_records('task_adhoc'));
-            $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $pagetaskid)));
+            $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $pagetaskid]));
             \core\task\manager::adhoc_task_failed($this->removaltaskpage);
-            $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $pagetaskid)));
+            $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $pagetaskid]));
             $this->assertCount($adhoctaskprecount, $DB->get_records('task_adhoc'));
             $exceptionthrown145 = $exception; // Run exeception case at end of function.
         }
 
         // The page module will be thought of as still present in the course (but deleted in page table).
-        $this->assertFalse($DB->record_exists('page', array('id' => $this->pagecm->instance))); // Deleted already.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->quizcm->id))); // Quiz cm still present.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->assigncm->id))); // Assign cm still present.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->pagecm->id))); // Still present (task failed).
+        $this->assertFalse($DB->record_exists('page', ['id' => $this->pagecm->instance])); // Deleted already.
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->quizcm->id])); // Quiz cm still present.
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->assigncm->id])); // Assign cm still present.
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->pagecm->id])); // Still present (task failed).
 
         // Queue adhoc task for url module deletion & get the task details before executing.
         \core\task\manager::queue_adhoc_task($this->removaltaskurl);
@@ -107,20 +106,20 @@ class diagnosis_test extends fix_course_delete_module_test {
         $this->removaltaskurl->execute();
         // Module URL deleted successfully. Replicate passed task.
         $this->assertCount($adhoctaskprecount, $DB->get_records('task_adhoc'));
-        $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $urltaskid)));
+        $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $urltaskid]));
         \core\task\manager::adhoc_task_complete($this->removaltaskurl);
         $this->assertCount($adhoctaskprecount - 1, $DB->get_records('task_adhoc'));
-        $this->assertFalse($DB->record_exists('task_adhoc', array('id' => $urltaskid)));
+        $this->assertFalse($DB->record_exists('task_adhoc', ['id' => $urltaskid]));
 
         // The url module was already deleted from course_modules but still present in url table.
-        $this->assertTrue($DB->record_exists('url', array('id' => $this->urlcm->instance))); // Orphaned record.
-        $this->assertFalse($DB->record_exists('course_modules', array('id' => $this->urlcm->id))); // Quiz cm already deleted.
+        $this->assertTrue($DB->record_exists('url', ['id' => $this->urlcm->instance])); // Orphaned record.
+        $this->assertFalse($DB->record_exists('course_modules', ['id' => $this->urlcm->id])); // Quiz cm already deleted.
 
         // Queue adhoc task for a multi-module delete (both quiz and assign).
         \core\task\manager::queue_adhoc_task($this->removaltaskmulti);
 
         // Get task's id.
-        $dbtasks = $DB->get_records('task_adhoc', array('classname' => '\core_course\task\course_delete_modules'));
+        $dbtasks = $DB->get_records('task_adhoc', ['classname' => '\core_course\task\course_delete_modules']);
         $multitaskid = $this->find_taskid($this->removaltaskmulti);
         $urltaskid = $this->find_taskid($this->removaltaskurl);
         $pagetaskid = $this->find_taskid($this->removaltaskpage);
@@ -139,10 +138,10 @@ class diagnosis_test extends fix_course_delete_module_test {
         } catch (\moodle_exception $exception) {
             // Replicate failed task.
             $this->assertCount($adhoctaskprecount, $DB->get_records('task_adhoc'));
-            $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $multitaskid)));
+            $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $multitaskid]));
             \core\task\manager::adhoc_task_failed($this->removaltaskmulti);
             $this->assertCount($adhoctaskprecount, $DB->get_records('task_adhoc'));
-            $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $multitaskid)));
+            $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $multitaskid]));
             $exceptionthrown204 = $exception; // Run exeception case at end of test function.
         }
 
@@ -150,14 +149,14 @@ class diagnosis_test extends fix_course_delete_module_test {
         // ... quiz still thought to be present.
         // ... page still thought to be present.
         // ... url has an orphaned record but deleted from course_modules.
-        $this->assertFalse($DB->record_exists('assign', array('id' => $this->assigncm->instance))); // Now deleted.
-        $this->assertFalse($DB->record_exists('quiz', array('id' => $this->quizcm->instance))); // Was already deleted.
-        $this->assertFalse($DB->record_exists('page', array('id' => $this->pagecm->instance))); // Was already deleted.
-        $this->assertTrue($DB->record_exists('url', array('id' => $this->urlcm->instance))); // Orphaned record.
-        $this->assertFalse($DB->record_exists('course_modules', array('id' => $this->assigncm->id))); // Assign cm deleted.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->quizcm->id))); // Quiz cm still present.
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->pagecm->id))); // Assign cm deleted.
-        $this->assertFalse($DB->record_exists('course_modules', array('id' => $this->urlcm->id))); // Assign cm deleted.
+        $this->assertFalse($DB->record_exists('assign', ['id' => $this->assigncm->instance])); // Now deleted.
+        $this->assertFalse($DB->record_exists('quiz', ['id' => $this->quizcm->instance])); // Was already deleted.
+        $this->assertFalse($DB->record_exists('page', ['id' => $this->pagecm->instance])); // Was already deleted.
+        $this->assertTrue($DB->record_exists('url', ['id' => $this->urlcm->instance])); // Orphaned record.
+        $this->assertFalse($DB->record_exists('course_modules', ['id' => $this->assigncm->id])); // Assign cm deleted.
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->quizcm->id])); // Quiz cm still present.
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->pagecm->id])); // Assign cm deleted.
+        $this->assertFalse($DB->record_exists('course_modules', ['id' => $this->urlcm->id])); // Assign cm deleted.
 
         // First create a delete_task_list object first.
         $deletetasklist = new delete_task_list(0);
@@ -176,16 +175,16 @@ class diagnosis_test extends fix_course_delete_module_test {
         }
 
         // Build symptoms.
-        $pagesymptoms = array((string) $this->page->cmid =>
-                              [get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules')]);
+        $pagesymptoms = [(string) $this->page->cmid =>
+                              [get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules')]];
 
-        $urlsymptoms  = array((string) $this->url->cmid =>
+        $urlsymptoms  = [(string) $this->url->cmid =>
                               [get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules'),
-                               get_string('symptom_course_module_table_record_missing', 'tool_fix_delete_modules')
-                              ]
-                             );
-        $multimodulesymptoms = array(get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules') =>
-                                     get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules'));
+                               get_string('symptom_course_module_table_record_missing', 'tool_fix_delete_modules'),
+                              ],
+                             ];
+        $multimodulesymptoms = [get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules') =>
+                                     get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules')];
 
         // Test creating a diagnosis object.
         $diagnosispagetask  = new diagnosis($deletepagetask, $pagesymptoms);
@@ -202,8 +201,10 @@ class diagnosis_test extends fix_course_delete_module_test {
 
         // Check multi-module deletion task.
         $this->assertTrue($diagnosismultitask->is_multi_module_task());
-        $this->assertEquals(get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules'),
-                            current($diagnosismultitask->get_symptoms()));
+        $this->assertEquals(
+            get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules'),
+            current($diagnosismultitask->get_symptoms())
+        );
 
         if ($exceptionthrown145 && $exceptionthrown145) {
             $this->expectException('moodle_exception');
@@ -213,6 +214,5 @@ class diagnosis_test extends fix_course_delete_module_test {
         } else if (!$exceptionthrown204) {
             $this->assertTrue($exceptionthrown204, "Expected Exception wasn't thrown for line 261");
         }
-
     }
 }
