@@ -77,13 +77,17 @@ class diagnosis {
 
         // If it's not one of the above, check individual cm symptoms.
         $this->modulehasmissingdata = false;
-        if (!in_array($stradhoctaskmissing, array_values($symptoms))
-            && !in_array($strmultimoduletask, array_values($symptoms))) {
+        if (
+            !in_array($stradhoctaskmissing, array_values($symptoms))
+            && !in_array($strmultimoduletask, array_values($symptoms))
+        ) {
             foreach ($symptoms as $cmid => $cmsymptoms) {
-                if (in_array($strmodulerecordmissing, $cmsymptoms)
+                if (
+                    in_array($strmodulerecordmissing, $cmsymptoms)
                     || in_array($strcmrecordmissing, $cmsymptoms)
                     || in_array($strcontextrecordmissing, $cmsymptoms)
-                    || in_array($strsectionrecordmissing, $cmsymptoms)) {
+                    || in_array($strsectionrecordmissing, $cmsymptoms)
+                ) {
                         $this->modulehasmissingdata = true;
                 }
             }
@@ -137,5 +141,4 @@ class diagnosis {
     public function module_has_missing_data() {
         return $this->modulehasmissingdata;
     }
-
 }

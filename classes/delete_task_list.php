@@ -67,7 +67,7 @@ class delete_task_list {
      *
      */
     private function set_deletetasks() {
-        $this->deletetasks = array();
+        $this->deletetasks = [];
         $cdmadhoctasks = \core\task\manager::get_adhoc_tasks('\core_course\task\course_delete_modules');
         foreach ($cdmadhoctasks as $taskid => $cdadhoctask) {
             if ($cdadhoctask->get_fail_delay() >= $this->minimumfaildelay) {

@@ -26,10 +26,10 @@
 
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
-require_once($CFG->libdir.'/moodlelib.php');
-require_once(__DIR__.'/form.php');
+require_once($CFG->libdir . '/moodlelib.php');
+require_once(__DIR__ . '/form.php');
 
-use tool_fix_delete_modules\reporter as reporter;
+use tool_fix_delete_modules\reporter;
 require_login();
 
 admin_externalpage_setup('tool_fix_delete_modules');
@@ -54,14 +54,18 @@ $pagesubtitle = get_string('displaypage-subtitle', 'tool_fix_delete_modules');
 $reports      = $reporter->get_tables_report();
 $diagnoses    = $reporter->get_diagnosis();
 if ($reports == '') { // No report means no adhoc tasks in queue.
-    $diagnoses = html_writer::tag('p',
-                                  get_string('success_none_found', 'tool_fix_delete_modules'),
-                                  array("class" => "text-success"));
+    $diagnoses = html_writer::tag(
+        'p',
+        get_string('success_none_found', 'tool_fix_delete_modules'),
+        ["class" => "text-success"]
+    );
 }
 if ($diagnoses == '') { // No diagnoses means no issues with queued adhoc tasks.
-    $diagnoses = html_writer::tag('p',
-                                  get_string('success_no_issues', 'tool_fix_delete_modules'),
-                                  array("class" => "text-success"));
+    $diagnoses = html_writer::tag(
+        'p',
+        get_string('success_no_issues', 'tool_fix_delete_modules'),
+        ["class" => "text-success"]
+    );
 }
 $maindata  = ['pagesubtitle' => $pagesubtitle,
               'reports' => $reports,
@@ -69,14 +73,13 @@ $maindata  = ['pagesubtitle' => $pagesubtitle,
 $output = $OUTPUT->render_from_template('tool_fix_delete_modules/main_elements', $maindata);
 
 if ($output == '') {
-    $output = html_writer::tag('p',
-                              get_string('success_none_found', 'tool_fix_delete_modules'),
-                              array("class" => "text-success"));
+    $output = html_writer::tag(
+        'p',
+        get_string('success_none_found', 'tool_fix_delete_modules'),
+        ["class" => "text-success"]
+    );
 }
 
 echo $output;
 
 echo $OUTPUT->footer();
-
-
-

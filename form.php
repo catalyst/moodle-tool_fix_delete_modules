@@ -48,8 +48,8 @@ class fix_delete_modules_form extends moodleform {
 
         $mform = $this->_form; // Don't forget the underscore!
 
-        $mform->addElement('submit', 'submit',  get_string('button_delete_mod_without_backup', 'tool_fix_delete_modules')
-                                                .' #'.$this->_customdata['cmid']);
+        $mform->addElement('submit', 'submit', get_string('button_delete_mod_without_backup', 'tool_fix_delete_modules')
+                                                . ' #' . $this->_customdata['cmid']);
         $mform->addElement('hidden', 'action', 'fix_module');
         $mform->setType('action', PARAM_ALPHAEXT);
         $mform->addElement('hidden', 'cmid', $this->_customdata['cmid']);
@@ -59,9 +59,9 @@ class fix_delete_modules_form extends moodleform {
         $mform->addElement('hidden', 'taskid', $this->_customdata['taskid']);
         $mform->setType('taskid', PARAM_INT);
     }
-
 }
 
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses -- These legacy forms are loaded together.
 /**
  * separate_delete_modules_form Form Class.
  *
@@ -71,7 +71,6 @@ class fix_delete_modules_form extends moodleform {
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class separate_delete_modules_form extends moodleform {
-
     /**
      * definition()
      *
@@ -80,15 +79,15 @@ class separate_delete_modules_form extends moodleform {
     public function definition() {
         // Add elements to form.
         global $CFG;
-        
+
         $mform = $this->_form; // Don't forget the underscore!
 
-        $mform->addElement('submit', 'submit',  get_string('button_separate_modules', 'tool_fix_delete_modules')
-                                                ." (Task id:".$this->_customdata['taskid'].')');
+        $mform->addElement('submit', 'submit', get_string('button_separate_modules', 'tool_fix_delete_modules')
+                                                . " (Task id:" . $this->_customdata['taskid'] . ')');
         $mform->addElement('hidden', 'action', 'separate_module');
         $mform->setType('action', PARAM_ALPHAEXT);
         $mform->addElement('hidden', 'taskid', $this->_customdata['taskid']);
         $mform->setType('taskid', PARAM_INT);
     }
-
 }
+// phpcs:enable PSR1.Classes.ClassDeclaration.MultipleClasses

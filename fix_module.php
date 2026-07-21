@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Delete Modules
  *
@@ -24,7 +25,7 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
-require_once(__DIR__.'/classes/reporter.php');
+require_once(__DIR__ . '/classes/reporter.php');
 require_login();
 
 use tool_fix_delete_modules\reporter;
@@ -45,7 +46,7 @@ if ($action == 'fix_module') {
     $PAGE->set_url($url);
     $PAGE->set_context(context_system::instance());
     $PAGE->set_title(get_string('pluginname', 'tool_fix_delete_modules'));
-    $PAGE->set_heading(get_string('pluginname', 'tool_fix_delete_modules'). " - deleting module");
+    $PAGE->set_heading(get_string('pluginname', 'tool_fix_delete_modules') . " - deleting module");
     $renderer = $PAGE->get_renderer('core');
 
     echo $OUTPUT->header();
@@ -54,7 +55,7 @@ if ($action == 'fix_module') {
     $reporter = new reporter(true, $minimumfaildelay);
 
     // Output template rendered results of fixing the course module.
-    echo $reporter->fix_tasks(array($taskid));
+    echo $reporter->fix_tasks([$taskid]);
 
     // Return to main page link.
     $urlstring  = html_writer::link($mainurl, get_string('returntomainlinklabel', 'tool_fix_delete_modules'));

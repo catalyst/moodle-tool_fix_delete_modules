@@ -28,8 +28,9 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage(
-                    'tool_fix_delete_modules_settings',
-                    get_string('generalsettings', 'admin'));
+        'tool_fix_delete_modules_settings',
+        get_string('generalsettings', 'admin')
+    );
 
     $settings->add(new admin_setting_heading(
         'tool_fix_delete_modules_general_settings',
@@ -60,4 +61,3 @@ if ($hassiteconfig) {
         )
     );
 }
-

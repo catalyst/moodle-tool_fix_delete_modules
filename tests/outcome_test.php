@@ -36,14 +36,13 @@ require_once("fix_course_delete_module_test.php");
  * @copyright   2022 Catalyst IT
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class outcome_test extends fix_course_delete_module_test {
-
+final class outcome_test extends fix_course_delete_module_test {
     /**
      * Test for get/set modulename & get/set contextid.
      *
      * @covers \tool_fix_course_delete_module\outcome
      */
-    public function test_outcome_class() {
+    public function test_outcome_class(): void {
         global $DB;
 
         // Queue adhoc task for a multi-module delete (both quiz and assign).
@@ -77,12 +76,12 @@ class outcome_test extends fix_course_delete_module_test {
         // The assign module has deleted from the course.
         // ... quiz are still thought to be present.
         // ... page are still thought to be present.
-        $this->assertFalse($DB->record_exists('course_modules', array('id' => $this->assigncm->id)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->pagecm->id)));
-        $this->assertTrue($DB->record_exists('course_modules', array('id' => $this->quizcm->id)));
-        $this->assertFalse($DB->record_exists('assign', array('id' => $this->assigncm->instance)));
-        $this->assertFalse($DB->record_exists('page', array('id' => $this->pagecm->instance)));
-        $this->assertFalse($DB->record_exists('quiz', array('id' => $this->quizcm->instance)));
+        $this->assertFalse($DB->record_exists('course_modules', ['id' => $this->assigncm->id]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->pagecm->id]));
+        $this->assertTrue($DB->record_exists('course_modules', ['id' => $this->quizcm->id]));
+        $this->assertFalse($DB->record_exists('assign', ['id' => $this->assigncm->instance]));
+        $this->assertFalse($DB->record_exists('page', ['id' => $this->pagecm->instance]));
+        $this->assertFalse($DB->record_exists('quiz', ['id' => $this->quizcm->instance]));
 
         // First create a delete_task_list object first.
         $deletetasklist = new delete_task_list(0);
@@ -98,7 +97,7 @@ class outcome_test extends fix_course_delete_module_test {
             }
         }
 
-        $dbtasks = $DB->get_records('task_adhoc', array('classname' => '\core_course\task\course_delete_modules'));
+        $dbtasks = $DB->get_records('task_adhoc', ['classname' => '\core_course\task\course_delete_modules']);
         $this->assertCount(2, $dbtasks);
 
         // Test creating a diagnosis object.
@@ -112,12 +111,12 @@ class outcome_test extends fix_course_delete_module_test {
                          get_string('outcome_completion_table_record_deleted', 'tool_fix_delete_modules'),
                          get_string('outcome_completion_criteria_table_record_deleted', 'tool_fix_delete_modules'),
                          get_string('outcome_tag_table_record_deleted', 'tool_fix_delete_modules'),
-                         get_string('outcome_module_fix_successful', 'tool_fix_delete_modules')
+                         get_string('outcome_module_fix_successful', 'tool_fix_delete_modules'),
         ];
 
         $messagesmulti = [get_string('outcome_separate_into_individual_task', 'tool_fix_delete_modules'),
                           get_string('outcome_adhoc_task_record_rescheduled', 'tool_fix_delete_modules'),
-                          get_string('outcome_task_fix_successful', 'tool_fix_delete_modules')
+                          get_string('outcome_task_fix_successful', 'tool_fix_delete_modules'),
         ];
 
         $outcomepage      = new outcome($deletepagetask, $messagespage);
@@ -137,6 +136,5 @@ class outcome_test extends fix_course_delete_module_test {
         } else {
             $this->assertTrue($exceptionthrown, "Expected Exception wasn't thrown for line 139");
         }
-
     }
 }

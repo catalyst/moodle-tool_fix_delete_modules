@@ -56,10 +56,12 @@ class delete_module {
      * @param int $courseid The course id in which the module being deleted is situated.
      * @param int $section The section id for the module being deleted.
      */
-    public function __construct(int $coursemoduleid,
-                                ?int $moduleinstanceid = null,
-                                ?int $courseid = null,
-                                ?int $section = null) {
+    public function __construct(
+        int $coursemoduleid,
+        ?int $moduleinstanceid = null,
+        ?int $courseid = null,
+        ?int $section = null
+    ) {
         $this->coursemoduleid = $coursemoduleid;
         $this->moduleinstanceid = $moduleinstanceid;
         $this->courseid = $courseid;
@@ -98,7 +100,7 @@ class delete_module {
                 $this->modulecontextid = \context_module::instance($this->coursemoduleid)->id;
             } catch (\dml_missing_record_exception $e) {
                 global $DB;
-                if ($result = $DB->get_records('context', array('contextlevel' => '70', 'instanceid' => $this->coursemoduleid))) {
+                if ($result = $DB->get_records('context', ['contextlevel' => '70', 'instanceid' => $this->coursemoduleid])) {
                     $this->modulecontextid = current($result)->id;
                 } else {
                     $this->modulecontextid = null;
@@ -117,14 +119,14 @@ class delete_module {
         global $DB;
         // First get moduleid.
         if (!isset($this->moduleinstanceid)) {
-            $queryarray = array('id' => $this->coursemoduleid);
+            $queryarray = ['id' => $this->coursemoduleid];
         } else {
-            $queryarray = array('id' => $this->coursemoduleid, 'instance' => $this->moduleinstanceid);
+            $queryarray = ['id' => $this->coursemoduleid, 'instance' => $this->moduleinstanceid];
         }
 
         if ($cmrecord = $DB->get_records('course_modules', $queryarray, '', 'module')) {
             $moduleid = current($cmrecord)->module;
-            if ($result = $DB->get_records('modules', array('id' => $moduleid), '', 'name')) {
+            if ($result = $DB->get_records('modules', ['id' => $moduleid], '', 'name')) {
                 $this->modulename = current($result)->name;
             } else {
                 $this->modulename = null;
@@ -133,5 +135,4 @@ class delete_module {
             $this->modulename = null;
         }
     }
-
 }

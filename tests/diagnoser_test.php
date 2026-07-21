@@ -36,14 +36,13 @@ require_once("fix_course_delete_module_test.php");
  * @copyright   2022 Catalyst IT
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class diagnoser_test extends fix_course_delete_module_test {
-
+final class diagnoser_test extends fix_course_delete_module_test {
     /**
      * Test for get/set modulename & get/set contextid.
      *
      * @covers \tool_fix_course_delete_module\diagnoser
      */
-    public function test_diagnoser_class() {
+    public function test_diagnoser_class(): void {
         global $DB;
 
         [$deletemultitask, $deletepagetask, $deleteurltask, $deletebooktask, $deletelabeltask, $exceptionthrown]
@@ -60,8 +59,8 @@ class diagnoser_test extends fix_course_delete_module_test {
                                   [get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules')]];
         $expectedsymptomsurl   = [(string) $this->url->cmid =>
                                   [get_string('symptom_module_table_record_missing', 'tool_fix_delete_modules'),
-                                   get_string('symptom_course_module_table_record_missing', 'tool_fix_delete_modules')
-                                  ]
+                                   get_string('symptom_course_module_table_record_missing', 'tool_fix_delete_modules'),
+                                  ],
         ];
         $expectedsymptomsmulti = [get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules') =>
                                   [get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules')]];
@@ -92,14 +91,14 @@ class diagnoser_test extends fix_course_delete_module_test {
         $this->assertEquals($expecteddiagnosismultitask, $diagnosermultitask->get_diagnosis());
 
         // Delete multitask from db and retest (both multi & missing adhoc task).
-        $this->assertTrue($DB->record_exists('task_adhoc', array('id' => $deletemultitask->taskid)));
-        $DB->delete_records('task_adhoc', array('id' => $deletemultitask->taskid));
-        $this->assertFalse($DB->record_exists('task_adhoc', array('id' => $deletemultitask->taskid)));
+        $this->assertTrue($DB->record_exists('task_adhoc', ['id' => $deletemultitask->taskid]));
+        $DB->delete_records('task_adhoc', ['id' => $deletemultitask->taskid]);
+        $this->assertFalse($DB->record_exists('task_adhoc', ['id' => $deletemultitask->taskid]));
         $diagnosermultitask = new diagnoser($deletemultitask);
         $expectedsymptomsmulti = [get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules') =>
                                   [get_string('symptom_multiple_modules_in_task', 'tool_fix_delete_modules')],
                                   get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules') =>
-                                  [get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules')]
+                                  [get_string('symptom_adhoc_task_record_missing', 'tool_fix_delete_modules')],
         ];
         $expecteddiagnosismultitask = new diagnosis($deletemultitask, $expectedsymptomsmulti);
         $this->assertTrue($deletemultitask->is_multi_module_task());
@@ -124,6 +123,5 @@ class diagnoser_test extends fix_course_delete_module_test {
         } else {
             $this->assertTrue($exceptionthrown, "Expected Exception wasn't thrown for line 151");
         }
-
     }
 }

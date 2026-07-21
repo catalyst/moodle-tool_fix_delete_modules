@@ -33,7 +33,7 @@ require_once("delete_module.php");
 require_once("diagnoser.php");
 require_once("outcome.php");
 require_once("surgeon.php");
-require_once(__DIR__."/../form.php");
+require_once(__DIR__ . "/../form.php");
 
 use html_table, html_writer, moodle_url, separate_delete_modules_form, fix_delete_modules_form;
 /**
@@ -60,7 +60,7 @@ class reporter {
      * @param int $minimumfaildelay The minimum value (seconds) for the faildelay field of the adhoc task.
      * @param int[] $querytaskids list of specific tasks to report/diagnose/fix (optional).
      */
-    public function __construct(bool $ishtmloutput = true, int $minimumfaildelay = 60, array $querytaskids = array()) {
+    public function __construct(bool $ishtmloutput = true, int $minimumfaildelay = 60, array $querytaskids = []) {
         $this->ishtmloutput = $ishtmloutput;
         $this->minimumfaildelay = $minimumfaildelay;
         $this->querytaskids = $querytaskids;
@@ -137,7 +137,7 @@ class reporter {
      * @return array of diagnosis
      */
     private function get_diagnosis_data(?array $taskids = null) {
-        $diagnoses = array();
+        $diagnoses = [];
         $deletetaskslist = new delete_task_list($this->minimumfaildelay);
         $deletetasks = $deletetaskslist->get_deletetasks();
         foreach ($deletetasks as $taskid => $deletetask) {
@@ -156,7 +156,7 @@ class reporter {
      *
      * @return string
      */
-    public function fix_tasks(array $taskids = array()) {
+    public function fix_tasks(array $taskids = []) {
         global $OUTPUT;
         $output = '';
         $outcomes = $this->get_fix_results($taskids);
@@ -182,8 +182,8 @@ class reporter {
      *
      * @return array
      */
-    private function get_fix_results(array $taskids = array()) {
-        $outcomes = array();
+    private function get_fix_results(array $taskids = []) {
+        $outcomes = [];
         $diagnoses = $this->get_diagnosis_data($taskids);
         foreach ($diagnoses as $diagnosis) {
             $surgeon = new surgeon($diagnosis);
@@ -201,9 +201,14 @@ class reporter {
     private function get_adhoctasktable(delete_task $deletetask) {
         global $DB, $OUTPUT;
         $output = '';
-        if ($records = $DB->get_records('task_adhoc',
-                                        array('id' => $deletetask->taskid), '',
-                                        'id, nextruntime, faildelay, customdata')) {
+        if (
+            $records = $DB->get_records(
+                'task_adhoc',
+                ['id' => $deletetask->taskid],
+                '',
+                'id, nextruntime, faildelay, customdata'
+            )
+        ) {
             foreach ($records as $key => $record) {
                 // Exclude adhoc tasks with faildelay below minimum config setting.
                 if (intval($record->faildelay) < $this->minimumfaildelay) {
@@ -232,11 +237,11 @@ class reporter {
 
         // Prepare SQL query.
         $cmids = $deletetask->get_coursemoduleids();
-        list($sqltail, $params) = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'id');
-        $where = 'WHERE id '. $sqltail;
+        [$sqltail, $params] = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'id');
+        $where = 'WHERE id ' . $sqltail;
         $sqlhead = 'SELECT id, course, module, instance, section, idnumber, deletioninprogress FROM {course_modules} ';
 
-        if ($records = $DB->get_records_sql($sqlhead.$where, $params)) {
+        if ($records = $DB->get_records_sql($sqlhead . $where, $params)) {
             $tableword = get_string('table_title_coursemodules', 'tool_fix_delete_modules');
             $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
             $data = ['title' => $tabletitle, 'records' => $records];
@@ -262,12 +267,12 @@ class reporter {
         // Display table for each module table.
         foreach ($modulenames as $modulename) {
             $thisnamecmids = $deletetask->get_modulenames(false, true, $modulename);
-            list($sqltail, $params) = $DB->get_in_or_equal(array_keys($thisnamecmids), SQL_PARAMS_NAMED, 'instanceid');
-            $where = 'WHERE id '. $sqltail;
-            $sqlhead = 'SELECT * FROM {'.$modulename.'} ';
+            [$sqltail, $params] = $DB->get_in_or_equal(array_keys($thisnamecmids), SQL_PARAMS_NAMED, 'instanceid');
+            $where = 'WHERE id ' . $sqltail;
+            $sqlhead = 'SELECT * FROM {' . $modulename . '} ';
 
-            if ($records = $DB->get_records_sql($sqlhead.$where, $params)) {
-                $tableword = get_string('table_title_module', 'tool_fix_delete_modules').': '.$modulename;
+            if ($records = $DB->get_records_sql($sqlhead . $where, $params)) {
+                $tableword = get_string('table_title_module', 'tool_fix_delete_modules') . ': ' . $modulename;
                 $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
                 $data = ['title' => $tabletitle, 'records' => $records];
                 $output .= $this->format_message($data, 'report_table');
@@ -290,11 +295,11 @@ class reporter {
 
         // Prepare SQL query.
         $cmids = $deletetask->get_coursemoduleids();
-        list($sqltail, $params) = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'instanceid');
-        $where = 'WHERE contextlevel = 70 AND instanceid '. $sqltail;
+        [$sqltail, $params] = $DB->get_in_or_equal($cmids, SQL_PARAMS_NAMED, 'instanceid');
+        $where = 'WHERE contextlevel = 70 AND instanceid ' . $sqltail;
         $sqlhead = 'SELECT * FROM {context} ';
 
-        if ($records = $DB->get_records_sql($sqlhead.$where, $params)) {
+        if ($records = $DB->get_records_sql($sqlhead . $where, $params)) {
             $tableword = get_string('table_title_context', 'tool_fix_delete_modules');
             $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
             $data = ['title' => $tabletitle, 'records' => $records];
@@ -322,16 +327,15 @@ class reporter {
 
         // Prepare SQL query.
         $contextids = $deletetask->get_contextids();
-        list($sqltail, $params) = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
-        $where = 'WHERE contextid '. $sqltail;
+        [$sqltail, $params] = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'contextid');
+        $where = 'WHERE contextid ' . $sqltail;
         $sqlhead = 'SELECT * FROM {files} ';
 
-        if ($records = $DB->get_records_sql($sqlhead.$where, $params)) {
-
+        if ($records = $DB->get_records_sql($sqlhead . $where, $params)) {
             // Build stats on file records.
             $filecount = 0;
-            $componentfileareacounts = array();
-            $mimetypecounts = array();
+            $componentfileareacounts = [];
+            $mimetypecounts = [];
             foreach ($records as $rkey => $record) {
                 if ($record->filename != ".") { // Only count files.
                     $filecount++;
@@ -351,22 +355,22 @@ class reporter {
             }
 
             // Flatten into one table.
-            $records = array();
-            $records[] = (object) array('filecount' => "$filecount");
+            $records = [];
+            $records[] = (object) ['filecount' => "$filecount"];
             foreach ($componentfileareacounts as $componentkey => $componentcounts) {
                 foreach ($componentcounts as $fileareakey => $count) {
-                    $records[] = (object) array("component/filearea: $componentkey/$fileareakey" => "$count");
+                    $records[] = (object) ["component/filearea: $componentkey/$fileareakey" => "$count"];
                 }
             }
             foreach ($mimetypecounts as $mimetypekey => $count) {
-                $records[] = (object) array("mimetype: $mimetypekey" => "$count");
+                $records[] = (object) ["mimetype: $mimetypekey" => "$count"];
             }
 
             $tableword = get_string('table_title_files', 'tool_fix_delete_modules');
             $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
             $data = ['title' => $tabletitle,
                      'records' => $records,
-                     'headings' => array("name", "count")];
+                     'headings' => ["name", "count"]];
             $output .= $this->format_message($data, 'report_table');
         }
         return $output;
@@ -390,21 +394,25 @@ class reporter {
         $output = '';
         $deletemodule = current($deletetask->get_deletemodules()); // Only one module in the task.
 
-        if ($records = $DB->get_records('grade_items',
-                                        array('itemmodule' => $deletemodule->get_modulename(),
+        if (
+            $records = $DB->get_records(
+                'grade_items',
+                ['itemmodule' => $deletemodule->get_modulename(),
                                               'iteminstance' => $deletemodule->moduleinstanceid,
-                                              'courseid' => $deletemodule->courseid))) {
-
+                'courseid' => $deletemodule->courseid]
+            )
+        ) {
             // Get count of grades for this grade item & add to record.
             foreach ($records as $rkey => $record) {
-                $gradescount = $DB->count_records('grade_grades', array('itemid' => $rkey));
+                $gradescount = $DB->count_records('grade_grades', ['itemid' => $rkey]);
                 $recordarray = (array) $record;
-                $recordarray = array('grades_count' => "$gradescount") + $recordarray;
+                $recordarray = ['grades_count' => "$gradescount"] + $recordarray;
                 $records[$rkey] = (object) $recordarray;
             }
 
             $tableword = get_string('table_title_grades', 'tool_fix_delete_modules');
-            $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);;
+            $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
+            ;
             $data = ['title' => $tabletitle, 'records' => $records];
             $output .= $this->format_message($data, 'report_table');
         }
@@ -429,8 +437,12 @@ class reporter {
         $output = '';
         $deletemodule = current($deletetask->get_deletemodules()); // Only one module in the task.
 
-        if ($records = $DB->get_records('tool_recyclebin_course',
-                                        array('courseid' => $deletemodule->courseid))) {
+        if (
+            $records = $DB->get_records(
+                'tool_recyclebin_course',
+                ['courseid' => $deletemodule->courseid]
+            )
+        ) {
             $tableword = get_string('table_title_recyclebin', 'tool_fix_delete_modules');
             $tabletitle = $this->get_word_task_module_string($tableword, $deletetask);
             $data = ['title' => $tabletitle, 'records' => $records];
@@ -448,19 +460,21 @@ class reporter {
      * @param bool $displaycourseid - defaulted to false.
      * @return string
      */
-    private function get_word_task_module_string(string $titlehead,
-                                                 delete_task $task,
-                                                 bool $displaymoduleinfo = true,
-                                                 bool $displaycourseid = true) {
+    private function get_word_task_module_string(
+        string $titlehead,
+        delete_task $task,
+        bool $displaymoduleinfo = true,
+        bool $displaycourseid = true
+    ) {
         $taskid = $task->taskid;
-        $outputstring = isset($taskid) ? $titlehead." taskid($taskid) " : $titlehead.' ';
+        $outputstring = isset($taskid) ? $titlehead . " taskid($taskid) " : $titlehead . ' ';
 
         $coursestring = '';
         if ($displaycourseid) {
             // Prepare course info (if available).
             $courseids = $task->get_courseids(true, true);
             if (!empty($courseids)) { // Assume there is only one courseid.
-                $coursestring = 'courseid:'.current($courseids).' ';
+                $coursestring = 'courseid:' . current($courseids) . ' ';
             }
         }
 
@@ -475,37 +489,37 @@ class reporter {
 
         // Pair up coursemodule ids and instance ids if possible.
         if (!empty($cmids) && !empty($moduleinstanceids) && count($cmids) == count($moduleinstanceids)) {
-            $combined = array();
+            $combined = [];
             $cmids = array_values($cmids);
             $moduleinstanceids = array_values($moduleinstanceids);
             if (count($cmids) > 4) { // Make an elipsis string.
-                $modulesstring = '(cmid:'.current($cmids).'/instanceid:'.current($moduleinstanceids).')...';
-                $modulesstring .= '(cmid:'.end($cmids).'/instanceid:'.end($moduleinstanceids).')';
+                $modulesstring = '(cmid:' . current($cmids) . '/instanceid:' . current($moduleinstanceids) . ')...';
+                $modulesstring .= '(cmid:' . end($cmids) . '/instanceid:' . end($moduleinstanceids) . ')';
             } else { // Otherwise, explicitly list each.
                 for ($i = 0; $i < count($cmids); $i++) {
-                    $combined[] = '(cmid:'.$cmids[$i].'/instanceid:'.$moduleinstanceids[$i].')';
+                    $combined[] = '(cmid:' . $cmids[$i] . '/instanceid:' . $moduleinstanceids[$i] . ')';
                 }
                 $modulesstring = implode(', ', $combined);
             }
         } else { // There aren't both arrays or they don't have matching number of elements.
             if (!empty($cmids)) { // Add coursemodule ids if present.
                 if (count($cmids) > 3) { // Make an elipsis string.
-                    $modulesstring = '(cmids:'.current($cmids).'...';
-                    $modulesstring .= end($cmids).')';
+                    $modulesstring = '(cmids:' . current($cmids) . '...';
+                    $modulesstring .= end($cmids) . ')';
                 } else {
-                    $modulesstring .= "(cmids:".implode(', ', $cmids).')';
+                    $modulesstring .= "(cmids:" . implode(', ', $cmids) . ')';
                 }
             }
             if (!empty($cmids)) { // Add instanceids if present.
                 if (count($cmids) > 3) { // Make an elipsis string.
-                    $modulesstring = '(instanceids:'.current($moduleinstanceids).'...';
-                    $modulesstring .= end($moduleinstanceids).')';
+                    $modulesstring = '(instanceids:' . current($moduleinstanceids) . '...';
+                    $modulesstring .= end($moduleinstanceids) . ')';
                 } else {
-                    $modulesstring .= "(instanceids:".implode(', ', $moduleinstanceids).')';
+                    $modulesstring .= "(instanceids:" . implode(', ', $moduleinstanceids) . ')';
                 }
             }
         }
-        $outputstring .= $coursestring."modules: ".$modulesstring;
+        $outputstring .= $coursestring . "modules: " . $modulesstring;
         return $outputstring;
     }
 
@@ -516,27 +530,27 @@ class reporter {
      * @param string[] $headings - array of table headings (optional) - empty array is ignored.
      * @return string
      */
-    private function get_texttable(array $arraytable, array $headings = array()) {
+    private function get_texttable(array $arraytable, array $headings = []) {
         $outputtable = '';
-        empty($headings) ? $titlerow = '' : $titlerow = implode('\t', $headings).PHP_EOL;
+        empty($headings) ? $titlerow = '' : $titlerow = implode('\t', $headings) . PHP_EOL;
         foreach ($arraytable as $record) {
             $row = '';
             if (!is_object($record)) {
                 if (!is_array($record)) {
-                    $record = array($record);
+                    $record = [$record];
                 }
                 foreach ($record as $value) {
-                    $row .= $value.PHP_EOL; // Each element is a row.
+                    $row .= $value . PHP_EOL; // Each element is a row.
                 }
                 $outputtable .= $row;
             } else { // Multi cell row; Each element in $record is a cell of a row.
                 foreach ($record as $cell) {
-                    $row .= $cell.'\t';
+                    $row .= $cell . '\t';
                 }
-                $outputtable .= $row.PHP_EOL;
+                $outputtable .= $row . PHP_EOL;
             }
         }
-        ($outputtable !== '') ? $outputtable = $titlerow.$outputtable.PHP_EOL : $outputtable = '';
+        ($outputtable !== '') ? $outputtable = $titlerow . $outputtable . PHP_EOL : $outputtable = '';
         return $outputtable;
     }
 
@@ -548,14 +562,14 @@ class reporter {
      */
     private function get_texttable_vertical(array $records) {
         $outputtable = '';
-        $titlerow = implode('\t', array_keys((array) current($records))).PHP_EOL;
+        $titlerow = implode('\t', array_keys((array) current($records))) . PHP_EOL;
         foreach ($records as $row) {
             foreach ($row as $cell) {
-                $outputtable .= $cell.'\t';
+                $outputtable .= $cell . '\t';
             }
             $outputtable .= PHP_EOL;
         }
-        ($outputtable !== '') ? $outputtable = $titlerow.$outputtable : $outputtable = '';
+        ($outputtable !== '') ? $outputtable = $titlerow . $outputtable : $outputtable = '';
         $outputtable .= PHP_EOL;
         return $outputtable;
     }
@@ -567,7 +581,7 @@ class reporter {
      * @param string[] $headings - array of table headings (optional) - empty array is ignored.
      * @return string - an html_table as a string
      */
-    private function get_htmltable(array $records, array $headings = array()) {
+    private function get_htmltable(array $records, array $headings = []) {
         global $OUTPUT;
         $table = new html_table();
         if (empty($headings)) {
@@ -576,13 +590,13 @@ class reporter {
             $table->head = $headings;
         }
         foreach ($records as $record) {
-            $row = array();
+            $row = [];
             if (!is_object($record)) {
                 if (!is_array($record)) {
-                    $record = array($record);
+                    $record = [$record];
                 }
                 foreach ($record as $key => $value) {
-                    $table->data[] = array($value); // Each element is a row.
+                    $table->data[] = [$value]; // Each element is a row.
                 }
                 $table->data[] = $row;
             } else {
@@ -591,7 +605,6 @@ class reporter {
                 }
                 $table->data[] = $row;
             }
-
         }
         return html_writer::table($table);
     }
@@ -610,7 +623,7 @@ class reporter {
             $table->head[] = $title;
         }
         foreach ($records as $record) {
-            $row = array();
+            $row = [];
             foreach ($record as $key => $value) {
                 $row[] = $key;
                 $row[] = $value;
@@ -644,7 +657,7 @@ class reporter {
         } else if ($diagnosis->is_multi_module_task() || count($deletemodules) > 1) {
             // Multimodule task - show separate task/modules button.
             $actionurl   = new moodle_url('/admin/tool/fix_delete_modules/separate_module.php');
-            $params      = array('taskid' => $taskid, 'action' => 'separate_module');
+            $params      = ['taskid' => $taskid, 'action' => 'separate_module'];
             $buttonmform = new separate_delete_modules_form($actionurl, $params);
 
             $description = get_string('diagnosis_recommend_separate_tasks', 'tool_fix_delete_modules', $taskid);
@@ -668,20 +681,18 @@ class reporter {
                 $modulename = current($task->get_modulenames());
 
                 $actionurl   = new moodle_url('/admin/tool/fix_delete_modules/fix_module.php');
-                $params      = array('action'     => 'fix_module',
+                $params      = ['action'     => 'fix_module',
                                      'cmid'       => $symptomcmid,
                                      'cmname' => $modulename,
-                                     'taskid'     => $taskid);
+                                     'taskid'     => $taskid];
                 $buttonmform = new fix_delete_modules_form($actionurl, $params);
 
                 $description = get_string('diagnosis_recommend_clear_remnant_data', 'tool_fix_delete_modules', $task->taskid);
                 $buttondata  = ['description' => $description, 'fixbutton' => $buttonmform->render()];
                 $htmloutput .= $OUTPUT->render_from_template('tool_fix_delete_modules/diagnosis_button', $buttondata);
-
             }
         }
         return $htmloutput;
-
     }
 
     /**
@@ -694,24 +705,28 @@ class reporter {
     private function format_message(array $data, string $templatename) {
         global $OUTPUT;
 
-        switch($templatename) {
+        switch ($templatename) {
             case 'task_report':
                 $data['body'] = $data['reporttables'];
                 break;
             case 'task_diagnosis':
-                $heading = array();
+                $heading = [];
                 if (empty($data['symptoms'])) {
-                    $data['symptoms'] = array(get_string('symptom_good_no_issues', 'tool_fix_delete_modules'));
+                    $data['symptoms'] = [get_string('symptom_good_no_issues', 'tool_fix_delete_modules')];
                 } else {
                     $heading = [get_string('symptoms', 'tool_fix_delete_modules')];
                 }
                 $data['body'] = $this->get_texttable($data['symptoms'], $heading);
                 break;
             case 'task_fix_results':
-                $data['table'] = $this->get_htmltable($data['outcomemessages'],
-                                                     array(get_string('result_messages', 'tool_fix_delete_modules')));
-                $data['body'] = $this->get_texttable($data['outcomemessages'],
-                                                     array(get_string('result_messages', 'tool_fix_delete_modules')));
+                $data['table'] = $this->get_htmltable(
+                    $data['outcomemessages'],
+                    [get_string('result_messages', 'tool_fix_delete_modules')]
+                );
+                $data['body'] = $this->get_texttable(
+                    $data['outcomemessages'],
+                    [get_string('result_messages', 'tool_fix_delete_modules')]
+                );
                 break;
             case 'report_table':
                 if (!isset($data['headings']) || empty($data['headings'])) {
@@ -726,6 +741,6 @@ class reporter {
                 break;
         }
         return $this->ishtmloutput ? $OUTPUT->render_from_template("tool_fix_delete_modules/$templatename", $data)
-                                    : $data['title'].PHP_EOL.$data['body'].PHP_EOL;
+                                    : $data['title'] . PHP_EOL . $data['body'] . PHP_EOL;
     }
 }
