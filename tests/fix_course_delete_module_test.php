@@ -96,12 +96,6 @@ class fix_course_delete_module_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
 
-        // Ensure all adhoc tasks/cache are cleared.
-        if (isset(\core\task\manager::$miniqueue)) {
-            \core\task\manager::$miniqueue = [];
-        } // Clear the cached queue.
-        $DB->delete_records('task_adhoc');
-
         // Setup a course with a page, a url, a book, and an assignment and a quiz module.
         $this->user     = $this->getDataGenerator()->create_user();
         $this->course   = $this->getDataGenerator()->create_course();
@@ -202,6 +196,12 @@ class fix_course_delete_module_test extends \advanced_testcase {
             'realuserid' => $this->user->id
         ];
         $this->removaltasklabel->set_custom_data($labeldata);
+
+        // Ensure adhoc tasks queued while creating the fixtures and the task cache are cleared.
+        if (isset(\core\task\manager::$miniqueue)) {
+            \core\task\manager::$miniqueue = [];
+        } // Clear the cached queue.
+        $DB->delete_records('task_adhoc');
     }
 
     /**
